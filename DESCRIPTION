@@ -22,6 +22,8 @@ Imports:
     S7 (>= 0.2.0)
 Suggests:
     covr,
+    cpp11,
+    decor,
     deSolve,
     DiagrammeR,
     dust2,
