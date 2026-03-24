@@ -2,7 +2,7 @@ Package: algebraicodin
 Title: Compositional Epidemiological Modeling with 'odin2'
 Version: 0.1.0
 Authors@R:
-    person("Simon", "Frost", email = "sdwfrost@gmail.com",
+    person("Simon", "Frost", email = "sdwfrost@users.noreply.github.com",
            role = c("aut", "cre"), comment = c(ORCID = "0000-0002-5207-9879"))
 Description: Compositional model building using applied category theory,
     targeting the odin2 DSL for high-performance simulation via dust2.

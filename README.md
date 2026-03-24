@@ -91,20 +91,20 @@ plot_trajectory(y, t, species = c("S", "I", "R"))
 
 | Vignette | Description |
 |----------|-------------|
-| [Getting started](vignettes/algebraicodin.Rmd) | Core workflow: Petri net → odin2 → simulate |
-| [Compositional modeling](vignettes/composition.Rmd) | Open systems and UWD composition |
-| [Stock-and-flow models](vignettes/stockflow.Rmd) | Stock-flow diagram interface |
-| [Compositional dynamics](vignettes/dynamics.Rmd) | ResourceSharers and Machines |
-| [Stratification](vignettes/stratification.Rmd) | Typed products for age/risk/geo strata |
-| [Stock-flow stratification](vignettes/sf-stratification.Rmd) | Stratification for stock-flow models |
-| [Model examples](vignettes/examples.Rmd) | SIR, SEIR, SIS, and more |
-| [More examples](vignettes/more-examples.Rmd) | Additional epidemiological models |
-| [Advanced topics](vignettes/advanced.Rmd) | Morphisms and complex compositions |
-| [Model types](vignettes/model-types.Rmd) | ODE, DDE, stochastic, and discrete |
-| [Array codegen](vignettes/array-codegen.Rmd) | Array-based odin2 code generation |
-| [Contact matrices](vignettes/contact-matrix.Rmd) | Age-structured contact mixing |
-| [Spatial models](vignettes/spatial.Rmd) | Multi-patch spatial dynamics |
-| [Fitting](vignettes/fitting.Rmd) | Bayesian inference with particle MCMC |
+| [Getting started](https://catrgory.github.io/algebraicodin/articles/algebraicodin.html) | Core workflow: Petri net → odin2 → simulate |
+| [Compositional modeling](https://catrgory.github.io/algebraicodin/articles/composition.html) | Open systems and UWD composition |
+| [Stock-and-flow models](https://catrgory.github.io/algebraicodin/articles/stockflow.html) | Stock-flow diagram interface |
+| [Compositional dynamics](https://catrgory.github.io/algebraicodin/articles/dynamics.html) | ResourceSharers and Machines |
+| [Stratification](https://catrgory.github.io/algebraicodin/articles/stratification.html) | Typed products for age/risk/geo strata |
+| [Stock-flow stratification](https://catrgory.github.io/algebraicodin/articles/sf-stratification.html) | Stratification for stock-flow models |
+| [Model examples](https://catrgory.github.io/algebraicodin/articles/examples.html) | SIR, SEIR, SIS, and more |
+| [More examples](https://catrgory.github.io/algebraicodin/articles/more-examples.html) | Additional epidemiological models |
+| [Advanced topics](https://catrgory.github.io/algebraicodin/articles/advanced.html) | Morphisms and complex compositions |
+| [Model types](https://catrgory.github.io/algebraicodin/articles/model-types.html) | ODE, DDE, stochastic, and discrete |
+| [Array codegen](https://catrgory.github.io/algebraicodin/articles/array-codegen.html) | Array-based odin2 code generation |
+| [Contact matrices](https://catrgory.github.io/algebraicodin/articles/contact-matrix.html) | Age-structured contact mixing |
+| [Spatial models](https://catrgory.github.io/algebraicodin/articles/spatial.html) | Multi-patch spatial dynamics |
+| [Fitting](https://catrgory.github.io/algebraicodin/articles/fitting.html) | Bayesian inference with particle MCMC |
 
 ## Author
 

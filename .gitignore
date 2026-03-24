@@ -22,3 +22,4 @@ vignettes/*.html
 vignettes/*.R
 # Man pages auto-generated (if using roxygen)
 # man/*.Rd
+vignettes/output/
