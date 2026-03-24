@@ -1,0 +1,393 @@
+---
+title: "More model examples"
+author: "Simon Frost"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{More model examples}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 8,
+  fig.height = 5
+)
+set.seed(42)
+```
+
+## Introduction
+
+This vignette demonstrates additional epidemiological models beyond the
+basic SIR, illustrating the flexibility of `algebraicodin`'s stock-flow
+framework. Each model is built, compiled via odin2, and simulated.
+
+```{r setup}
+library(algebraicodin)
+library(odin2)
+library(dust2)
+```
+
+## Ross-Macdonald vector-borne model
+
+The Ross-Macdonald model describes malaria-like transmission between
+humans and mosquitoes. Humans cycle through Susceptible → Infected →
+Recovered, while mosquitoes go from Susceptible → Infected (no recovery).
+Mosquitoes have birth and death dynamics.
+
+Key features demonstrated:
+- **Two host populations** (humans and mosquitoes) in a single stock-flow model
+- **NULL flows** for birth (inflow from nothing) and death (outflow to nothing)
+- **Multiple sum variables** for separate population totals
+
+```{r ross-macdonald-model}
+ross_mac <- stock_and_flow(
+  stocks = c("Sh", "Ih", "Rh", "Sv", "Iv"),
+  flows = list(
+    # Human disease dynamics
+    human_inf = flow(from = "Sh", to = "Ih",
+      rate = a * b * Iv / Nh * Sh),
+    human_rec = flow(from = "Ih", to = "Rh", rate = r * Ih),
+    # Mosquito infection
+    mosq_inf = flow(from = "Sv", to = "Iv",
+      rate = a * c_param * Ih / Nh * Sv),
+    # Mosquito demographics
+    mosq_birth = flow(from = NULL, to = "Sv", rate = mu * Nm),
+    mosq_death_s = flow(from = "Sv", to = NULL, rate = mu * Sv),
+    mosq_death_i = flow(from = "Iv", to = NULL, rate = mu * Iv)
+  ),
+  sums = list(
+    Nh = c("Sh", "Ih", "Rh"),
+    Nm = c("Sv", "Iv")
+  ),
+  params = c("a", "b", "c_param", "r", "mu")
+)
+```
+
+Parameters:
+- `a` — mosquito biting rate
+- `b` — probability of human infection per bite
+- `c_param` — probability of mosquito infection per bite on infected human
+- `r` — human recovery rate
+- `mu` — mosquito birth/death rate (1/lifespan)
+
+```{r ross-macdonald-code}
+cat(sf_to_odin(ross_mac, type = "ode"))
+```
+
+```{r ross-macdonald-sim, fig.cap = "Ross-Macdonald vector-borne disease dynamics"}
+gen <- sf_to_odin_system(ross_mac, type = "ode")
+sys <- dust_system_create(gen(), list(
+  a = 0.3, b = 0.5, c_param = 0.5, r = 0.01, mu = 0.1,
+  Sh0 = 990, Ih0 = 10, Rh0 = 0, Sv0 = 5000, Iv0 = 100
+))
+dust_system_set_state_initial(sys)
+t <- seq(0, 365)
+res <- dust_system_simulate(sys, t)
+st <- dust_unpack_state(sys, res)
+
+par(mfrow = c(1, 2))
+plot(t, st$Sh, type = "l", col = "steelblue", lwd = 2,
+  ylim = c(0, 1000), xlab = "Days", ylab = "Humans",
+  main = "Human dynamics")
+lines(t, st$Ih, col = "tomato", lwd = 2)
+lines(t, st$Rh, col = "seagreen", lwd = 2)
+legend("right", c("S_h", "I_h", "R_h"),
+  col = c("steelblue", "tomato", "seagreen"), lty = 1, lwd = 2)
+
+plot(t, st$Sv, type = "l", col = "steelblue", lwd = 2,
+  ylim = c(0, max(st$Sv)), xlab = "Days", ylab = "Mosquitoes",
+  main = "Mosquito dynamics")
+lines(t, st$Iv, col = "tomato", lwd = 2)
+legend("right", c("S_v", "I_v"),
+  col = c("steelblue", "tomato"), lty = 1, lwd = 2)
+```
+
+The human population is conserved (no human demographics), while the mosquito
+population reaches a steady state through births and deaths:
+
+```{r ross-macdonald-check}
+total_h <- st$Sh[366] + st$Ih[366] + st$Rh[366]
+cat(sprintf("Human population at t=365: %.0f (initial: 1000)\n", total_h))
+cat(sprintf("Max human infections: %.0f\n", max(st$Ih)))
+```
+
+## SEIR with demographics
+
+The SEIR model adds an Exposed compartment (latent period before becoming
+infectious). Adding birth and death processes creates an endemic equilibrium
+where the disease persists indefinitely.
+
+```{r seir-model}
+seir_demo <- stock_and_flow(
+  stocks = c("S", "E", "I", "R"),
+  flows = list(
+    exposure = flow(from = "S", to = "E", rate = beta * S * I / N),
+    progression = flow(from = "E", to = "I", rate = sigma * E),
+    recovery = flow(from = "I", to = "R", rate = gamma * I),
+    birth = flow(from = NULL, to = "S", rate = mu * N),
+    death_S = flow(from = "S", to = NULL, rate = mu * S),
+    death_E = flow(from = "E", to = NULL, rate = mu * E),
+    death_I = flow(from = "I", to = NULL, rate = mu * I),
+    death_R = flow(from = "R", to = NULL, rate = mu * R)
+  ),
+  sums = list(N = c("S", "E", "I", "R")),
+  params = c("beta", "sigma", "gamma", "mu")
+)
+```
+
+With demographics, births balance deaths so the total population stays roughly
+constant, and the disease reaches an endemic equilibrium:
+
+```{r seir-sim, fig.cap = "SEIR with demographics — epidemic settles to endemic state"}
+gen <- sf_to_odin_system(seir_demo, type = "ode")
+sys <- dust_system_create(gen(), list(
+  beta = 0.5, sigma = 0.2, gamma = 0.1, mu = 0.01,
+  S0 = 990, E0 = 0, I0 = 10, R0 = 0
+))
+dust_system_set_state_initial(sys)
+t <- seq(0, 730)  # 2 years
+res <- dust_system_simulate(sys, t)
+st <- dust_unpack_state(sys, res)
+
+par(mfrow = c(1, 2))
+plot(t, st$S, type = "l", col = "steelblue", lwd = 2,
+  ylim = c(0, 1000), xlab = "Days", ylab = "Count",
+  main = "SEIR compartments")
+lines(t, st$E, col = "orange", lwd = 2)
+lines(t, st$I, col = "tomato", lwd = 2)
+lines(t, st$R, col = "seagreen", lwd = 2)
+legend("right", c("S", "E", "I", "R"),
+  col = c("steelblue", "orange", "tomato", "seagreen"), lty = 1, lwd = 2)
+
+total <- st$S + st$E + st$I + st$R
+plot(t, total, type = "l", col = "black", lwd = 2,
+  xlab = "Days", ylab = "Total",
+  main = "Population conservation")
+```
+
+```{r seir-check}
+cat(sprintf("Population at t=730: %.1f (initial: 1000)\n",
+  st$S[731] + st$E[731] + st$I[731] + st$R[731]))
+cat(sprintf("Endemic I at t=730: %.1f\n", st$I[731]))
+```
+
+## SIS model (no immunity)
+
+In the SIS model, recovered individuals return directly to the susceptible
+pool. This creates an endemic equilibrium at I* = N(1 − γ/β) when R₀ = β/γ > 1.
+
+```{r sis-model}
+sis <- stock_and_flow(
+  stocks = c("S", "I"),
+  flows = list(
+    infection = flow(from = "S", to = "I", rate = beta * S * I / N),
+    recovery = flow(from = "I", to = "S", rate = gamma * I)
+  ),
+  sums = list(N = c("S", "I")),
+  params = c("beta", "gamma")
+)
+```
+
+```{r sis-sim, fig.cap = "SIS model converges to endemic equilibrium"}
+gen <- sf_to_odin_system(sis, type = "ode")
+sys <- dust_system_create(gen(), list(
+  beta = 0.5, gamma = 0.1,
+  S0 = 990, I0 = 10
+))
+dust_system_set_state_initial(sys)
+t <- seq(0, 200)
+res <- dust_system_simulate(sys, t)
+st <- dust_unpack_state(sys, res)
+
+I_star <- 1000 * (1 - 0.1 / 0.5)
+
+plot(t, st$I, type = "l", col = "tomato", lwd = 2,
+  xlab = "Time", ylab = "Infected",
+  main = "SIS endemic equilibrium")
+abline(h = I_star, lty = 2, col = "grey40")
+text(150, I_star + 20, sprintf("I* = %g", I_star), col = "grey40")
+```
+
+```{r sis-check}
+cat(sprintf("R0 = beta/gamma = %.1f\n", 0.5 / 0.1))
+cat(sprintf("Expected I* = %.0f, Simulated I(200) = %.1f\n",
+  I_star, st$I[201]))
+```
+
+## Multi-strain SIR via stratification
+
+Stratification can model multiple strains sharing the same susceptible pool.
+Each strain has independent infection and recovery dynamics:
+
+```{r multistrain-model}
+sir <- stock_and_flow(
+  stocks = c("S", "I", "R"),
+  flows = list(
+    infection = flow(from = "S", to = "I", rate = beta * S * I / N),
+    recovery = flow(from = "I", to = "R", rate = gamma * I)
+  ),
+  sums = list(N = c("S", "I", "R")),
+  params = c("beta", "gamma")
+)
+
+sir_2strain <- sf_stratify(sir, c("strain1", "strain2"),
+  flow_types = c(infection = "disease", recovery = "disease"))
+```
+
+```{r multistrain-code}
+code <- sf_to_odin(sir_2strain, type = "ode")
+cat(code)
+```
+
+```{r multistrain-sim, fig.cap = "Two competing strains with different transmission rates"}
+gen <- sf_to_odin_system(sir_2strain, type = "ode")
+sys <- dust_system_create(gen(), list(
+  beta = 0.3, gamma = 0.1,
+  S_strain10 = 990, S_strain20 = 990,
+  I_strain10 = 10, I_strain20 = 5,
+  R_strain10 = 0, R_strain20 = 0
+))
+dust_system_set_state_initial(sys)
+t <- seq(0, 200)
+res <- dust_system_simulate(sys, t)
+st <- dust_unpack_state(sys, res)
+
+plot(t, st$I_strain1, type = "l", col = "tomato", lwd = 2,
+  ylim = c(0, max(st$I_strain1, st$I_strain2)),
+  xlab = "Time", ylab = "Infected",
+  main = "Two-strain SIR")
+lines(t, st$I_strain2, col = "steelblue", lwd = 2)
+legend("topright", c("Strain 1 (I0=10)", "Strain 2 (I0=5)"),
+  col = c("tomato", "steelblue"), lty = 1, lwd = 2)
+```
+
+## Stochastic SIR
+
+The same base model can be compiled as a stochastic discrete-time model
+with Binomial transitions:
+
+```{r stochastic-sir}
+gen_stoch <- sf_to_odin_system(sir, type = "stochastic")
+```
+
+```{r stochastic-ensemble, fig.cap = "Stochastic SIR — 20 realizations"}
+n_reps <- 20
+t <- seq(0, 200)
+I_matrix <- matrix(NA, nrow = n_reps, ncol = length(t))
+
+for (k in seq_len(n_reps)) {
+  sys <- dust_system_create(gen_stoch(), list(
+    beta = 0.3, gamma = 0.1,
+    S0 = 990, I0 = 10, R0 = 0
+  ), n_particles = 1, dt = 0.25)
+  dust_system_set_state_initial(sys)
+  res <- dust_system_simulate(sys, t)
+  st <- dust_unpack_state(sys, res)
+  I_matrix[k, ] <- as.numeric(st$I)
+}
+
+matplot(t, t(I_matrix), type = "l", lty = 1, col = adjustcolor("tomato", 0.3),
+  xlab = "Time", ylab = "Infected", main = "Stochastic SIR ensemble")
+lines(t, colMeans(I_matrix), col = "black", lwd = 2)
+legend("topright", c("Individual runs", "Mean"),
+  col = c("tomato", "black"), lty = 1, lwd = c(1, 2))
+```
+
+## Lotka-Volterra predator-prey
+
+Stock-flow models are not limited to epidemiology. Here we model the
+classic Lotka-Volterra predator-prey dynamics:
+
+```{r lotka-volterra}
+lv <- stock_and_flow(
+  stocks = c("prey", "pred"),
+  flows = list(
+    prey_birth = flow(from = NULL, to = "prey", rate = alpha * prey),
+    predation = flow(from = "prey", to = NULL, rate = beta * prey * pred),
+    pred_birth = flow(from = NULL, to = "pred", rate = delta * prey * pred),
+    pred_death = flow(from = "pred", to = NULL, rate = gamma_p * pred)
+  ),
+  params = c("alpha", "beta", "delta", "gamma_p")
+)
+```
+
+```{r lv-sim, fig.cap = "Lotka-Volterra predator-prey oscillations"}
+gen <- sf_to_odin_system(lv, type = "ode")
+sys <- dust_system_create(gen(), list(
+  alpha = 1.1, beta = 0.4, delta = 0.1, gamma_p = 0.4,
+  prey0 = 10, pred0 = 10
+))
+dust_system_set_state_initial(sys)
+t <- seq(0, 100, by = 0.1)
+res <- dust_system_simulate(sys, t)
+st <- dust_unpack_state(sys, res)
+
+par(mfrow = c(1, 2))
+plot(t, st$prey, type = "l", col = "steelblue", lwd = 2,
+  xlab = "Time", ylab = "Population",
+  main = "Time series")
+lines(t, st$pred, col = "tomato", lwd = 2)
+legend("topright", c("Prey", "Predator"),
+  col = c("steelblue", "tomato"), lty = 1, lwd = 2)
+
+plot(st$prey, st$pred, type = "l", col = "purple", lwd = 1.5,
+  xlab = "Prey", ylab = "Predator",
+  main = "Phase portrait")
+points(st$prey[1], st$pred[1], pch = 16, col = "black", cex = 1.5)
+```
+
+## SIR with waning immunity
+
+An SIRS model where immunity wanes at rate `omega`, returning recovered
+individuals to the susceptible pool:
+
+```{r sirs-model}
+sirs <- stock_and_flow(
+  stocks = c("S", "I", "R"),
+  flows = list(
+    infection = flow(from = "S", to = "I", rate = beta * S * I / N),
+    recovery = flow(from = "I", to = "R", rate = gamma * I),
+    waning = flow(from = "R", to = "S", rate = omega * R)
+  ),
+  sums = list(N = c("S", "I", "R")),
+  params = c("beta", "gamma", "omega")
+)
+```
+
+```{r sirs-sim, fig.cap = "SIRS with waning immunity — recurrent epidemics"}
+gen <- sf_to_odin_system(sirs, type = "ode")
+sys <- dust_system_create(gen(), list(
+  beta = 0.5, gamma = 0.1, omega = 0.01,
+  S0 = 990, I0 = 10, R0 = 0
+))
+dust_system_set_state_initial(sys)
+t <- seq(0, 1000)
+res <- dust_system_simulate(sys, t)
+st <- dust_unpack_state(sys, res)
+
+plot(t, st$I, type = "l", col = "tomato", lwd = 2,
+  xlab = "Time", ylab = "Infected",
+  main = "SIRS with waning immunity")
+```
+
+## Summary
+
+This vignette demonstrated:
+
+- **Vector-borne disease** (Ross-Macdonald) — two host populations, birth/death dynamics
+- **SEIR with demographics** — endemic equilibrium through birth/death balance
+- **SIS** — no immunity, analytical endemic equilibrium I* = N(1 − γ/β)
+- **Multi-strain** — stratification for competing pathogen variants
+- **Stochastic ensembles** — discrete-time Binomial transitions
+- **Predator-prey** (Lotka-Volterra) — non-epidemiological application
+- **Waning immunity** (SIRS) — recurrent epidemic dynamics
+
+All models follow the same workflow: define with `stock_and_flow()`,
+generate code with `sf_to_odin()` or `sf_to_odin_system()`, and simulate
+with dust2.

@@ -1,0 +1,390 @@
+---
+title: "Advanced topics: morphisms and complex models"
+author: "Simon Frost"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{Advanced topics: morphisms and complex models}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Introduction
+
+This vignette covers advanced features of algebraicodin:
+
+- **Morphisms** between Petri nets (typed nets as structure-preserving maps)
+- **Schema migration** for transforming models
+- **Complex compositions** combining composition and stratification
+- **Staged infections** (linear chain trick)
+- **Multi-component models** (SIRH with hospitalization and death)
+
+These features demonstrate how category theory provides a principled
+framework for building and transforming epidemiological models.
+
+```{r setup}
+library(algebraicodin)
+```
+
+## Morphisms of Petri nets
+
+A **morphism** $\phi: P_1 \to P_2$ between Petri nets maps species to
+species and transitions to transitions in a structure-preserving way. In
+algebraicodin, this is exactly what `typed_petri()` creates—a morphism
+from a concrete model to a type system.
+
+The morphism must preserve the incidence structure: if species $s$ is an
+input to transition $t$ in $P_1$, then $\phi(s)$ must be an input to
+$\phi(t)$ in $P_2$.
+
+```{r morphism-example}
+ont <- infectious_ontology()
+
+sir <- labelled_petri_net(
+  c("S", "I", "R"),
+  inf = c("S", "I") %=>% c("I", "I"),
+  rec = "I" %=>% "R"
+)
+phi <- typed_petri(sir, ont,
+  species_types    = c(S = "Pop", I = "Pop", R = "Pop"),
+  transition_types = c(inf = "infect", rec = "disease")
+)
+```
+
+The morphism $\phi$ encodes:
+
+| Component | SIR (domain) | Ontology (codomain) |
+|-----------|-------------|---------------------|
+| Species | S, I, R | Pop, Pop, Pop |
+| Transitions | inf, rec | infect, disease |
+| Input arcs | S→inf, I→inf, I→rec | Pop→infect, Pop→infect, Pop→disease |
+| Output arcs | I→inf, I→inf, R→rec | Pop→infect, Pop→infect, Pop→disease |
+
+```{r morphism-maps}
+cat("Species map:", phi@species_map, "\n")
+cat("Transition map:", phi@transition_map, "\n")
+cat("Input arc map:", phi@input_map, "\n")
+cat("Output arc map:", phi@output_map, "\n")
+```
+
+```{r morphism-diagram}
+plot_petri(phi)
+```
+
+## Schema migration via catlab
+
+The catlab package provides `delta_migrate()` for pullback migration
+along schema functors. This can transform data between different
+representations of the same mathematical structure.
+
+```{r migration}
+# Two schemas for the same data, related by a functor
+SchA <- acsets::BasicSchema(
+  obs = c("Person", "City"),
+  homs = list(acsets::hom("lives_in", "Person", "City"))
+)
+SchB <- acsets::BasicSchema(
+  obs = c("Individual", "Location"),
+  homs = list(acsets::hom("residence", "Individual", "Location"))
+)
+
+# Functor F: SchA → SchB
+F <- catlab::FinFunctor(
+  ob_map  = list(Person = "Individual", City = "Location"),
+  hom_map = list(lives_in = "residence"),
+  dom = catlab::FinCat(schema = SchA),
+  codom = catlab::FinCat(schema = SchB)
+)
+
+# Data on SchB
+DataB <- acsets::acset_type(SchB)
+db <- DataB()
+acsets::add_part(db, "Individual")
+acsets::add_part(db, "Individual")
+acsets::add_part(db, "Location")
+acsets::set_subpart(db, 1L, "residence", 1L)
+acsets::set_subpart(db, 2L, "residence", 1L)
+
+# Migrate to SchA
+DataA <- acsets::acset_type(SchA)
+da <- catlab::delta_migrate(F, db, DataA)
+cat("Persons:", acsets::nparts(da, "Person"), "\n")
+cat("Cities:", acsets::nparts(da, "City"), "\n")
+cat("Person 1 lives_in:", acsets::subpart(da, 1L, "lives_in"), "\n")
+```
+
+This migration preserves the relational structure while renaming the
+components—analogous to renaming compartments in an epidemiological
+model.
+
+## Staged infection (linear chain trick)
+
+The linear chain trick models non-exponential residence times by
+splitting a compartment into multiple stages. An infectious period with
+Erlang-distributed duration uses $k$ sequential I-stages.
+
+```{r stages}
+# SIR with 3 infectious stages
+sir_stages <- labelled_petri_net(
+  c("S", "I1", "I2", "I3", "R"),
+  inf1 = c("S", "I1") %=>% c("I1", "I1"),
+  inf2 = c("S", "I2") %=>% c("I2", "I2"),
+  inf3 = c("S", "I3") %=>% c("I3", "I3"),
+  prog12 = "I1" %=>% "I2",
+  prog23 = "I2" %=>% "I3",
+  rec    = "I3" %=>% "R"
+)
+species_names(sir_stages)
+transition_names(sir_stages)
+```
+
+```{r stages-diagram}
+plot_petri(sir_stages)
+```
+
+```{r stages-odin}
+cat(pn_to_odin(sir_stages, "ode"))
+```
+
+### Programmatic stage generation
+
+For arbitrary numbers of stages, build the Petri net programmatically:
+
+```{r stages-programmatic}
+make_staged_sir <- function(n_stages) {
+  snames <- c("S", paste0("I", seq_len(n_stages)), "R")
+  pn <- LabelledPetriNet()
+  sids <- setNames(
+    vapply(snames, function(s) acsets::add_part(pn, "S", sname = s), integer(1)),
+    snames
+  )
+
+  # Infection from each stage
+
+  for (k in seq_len(n_stages)) {
+    ik <- paste0("I", k)
+    tname <- paste0("inf", k)
+    tid <- acsets::add_part(pn, "T", tname = tname)
+    acsets::add_part(pn, "I", is = sids[["S"]], it = tid)
+    acsets::add_part(pn, "I", is = sids[[ik]], it = tid)
+    acsets::add_part(pn, "O", os = sids[[ik]], ot = tid)
+    acsets::add_part(pn, "O", os = sids[[ik]], ot = tid)
+  }
+
+  # Progression between stages
+  for (k in seq_len(n_stages - 1L)) {
+    from <- paste0("I", k)
+    to <- paste0("I", k + 1L)
+    tname <- paste0("prog", k, k + 1)
+    tid <- acsets::add_part(pn, "T", tname = tname)
+    acsets::add_part(pn, "I", is = sids[[from]], it = tid)
+    acsets::add_part(pn, "O", os = sids[[to]], ot = tid)
+  }
+
+  # Recovery from last stage
+  tid <- acsets::add_part(pn, "T", tname = "rec")
+  acsets::add_part(pn, "I", is = sids[[paste0("I", n_stages)]], it = tid)
+  acsets::add_part(pn, "O", os = sids[["R"]], ot = tid)
+
+  pn
+}
+
+sir5 <- make_staged_sir(5)
+cat("5-stage SIR: ", acsets::nparts(sir5, "S"), "species,",
+    acsets::nparts(sir5, "T"), "transitions\n")
+```
+
+```{r stages-run, fig.width = 6, fig.height = 4}
+code5 <- pn_to_odin(sir5, "ode")
+gen5 <- odin2::odin(code5)
+pars5 <- c(
+  setNames(as.list(rep(0.0005, 5)), paste0("inf", 1:5)),
+  setNames(as.list(rep(1.0, 4)), paste0("prog", 1:4, 2:5)),
+  list(rec = 1.0, S0 = 990, I10 = 10),
+  setNames(as.list(rep(0, 4)), paste0("I", 2:5, "0")),
+  list(R0 = 0)
+)
+sys5 <- dust2::dust_system_create(gen5, pars5, n_particles = 1)
+dust2::dust_system_set_state_initial(sys5)
+t <- seq(0, 40, by = 0.1)
+y5 <- dust2::dust_system_simulate(sys5, t)
+
+# Compare 1-stage vs 5-stage
+gen1 <- odin2::odin(pn_to_odin(sir, "ode"))
+sys1 <- dust2::dust_system_create(gen1,
+  list(inf = 0.0005, rec = 0.25, S0 = 990, I0 = 10, R0 = 0),
+  n_particles = 1)
+dust2::dust_system_set_state_initial(sys1)
+y1 <- dust2::dust_system_simulate(sys1, t)
+
+library(ggplot2)
+df <- data.frame(
+  time = rep(t, 2),
+  I = c(y1[2, ], rowSums(t(y5[2:6, , drop = FALSE]))),
+  model = rep(c("Exponential (1 stage)", "Erlang (5 stages)"), each = length(t))
+)
+ggplot(df, aes(time, I, colour = model)) +
+  geom_line(linewidth = 0.8) +
+  labs(title = "Effect of staged infection on epidemic dynamics",
+       x = "Time", y = "Total infectious") +
+  theme_minimal()
+```
+
+The 5-stage model produces a sharper, later epidemic peak because the
+Erlang distribution has less variance than the exponential.
+
+## SIRH: hospitalization and death
+
+Complex models combine multiple transition types. Here we build SIRH
+(with hospitalization and death) compositionally:
+
+```{r sirh}
+infection   <- exposure_petri("S", "I", "I", "inf")
+recovery    <- spontaneous_petri("I", "R", "rec")
+hosp        <- spontaneous_petri("I", "H", "hosp")
+hosp_rec    <- spontaneous_petri("H", "R", "hosp_rec")
+death_inf   <- spontaneous_petri("I", "D", "death_I")
+death_hosp  <- spontaneous_petri("H", "D", "death_H")
+
+w <- catlab::uwd(
+  outer      = c("S", "I", "R", "H", "D"),
+  infection  = c("S", "I"),
+  recovery   = c("I", "R"),
+  hosp       = c("I", "H"),
+  hosp_rec   = c("H", "R"),
+  death_inf  = c("I", "D"),
+  death_hosp = c("H", "D")
+)
+sirh <- oapply(w, list(infection, recovery, hosp, hosp_rec, death_inf, death_hosp))
+cat(pn_to_odin(apex(sirh), "ode"))
+```
+
+```{r sirh-diagram, fig.show = "hold"}
+plot_uwd(w)
+plot_petri(sirh)
+```
+
+```{r sirh-run, fig.width = 6, fig.height = 4}
+gen <- odin2::odin(pn_to_odin(apex(sirh), "ode"))
+pars <- list(
+  inf = 0.0005, rec = 0.2, hosp = 0.05, hosp_rec = 0.1,
+  death_I = 0.01, death_H = 0.02,
+  S0 = 990, I0 = 10, R0 = 0, H0 = 0, D0 = 0
+)
+sys <- dust2::dust_system_create(gen, pars, n_particles = 1)
+dust2::dust_system_set_state_initial(sys)
+y <- dust2::dust_system_simulate(sys, t)
+
+snames <- species_names(apex(sirh))
+df <- data.frame(
+  time = rep(t, length(snames)),
+  value = as.vector(t(y)),
+  compartment = factor(rep(snames, each = length(t)), levels = snames)
+)
+ggplot(df, aes(time, value, colour = compartment)) +
+  geom_line(linewidth = 0.7) +
+  labs(title = "SIRH model with death",
+       x = "Time", y = "Population") +
+  theme_minimal()
+```
+
+## Combining composition and stratification
+
+The real power emerges when we combine composition and stratification.
+Here we compose an SEIR model, then stratify it by age:
+
+```{r seir-age}
+# 1. Build SEIR compositionally
+exposure    <- exposure_petri("S", "I", "E", "exp")
+progression <- spontaneous_petri("E", "I", "prog")
+recovery    <- spontaneous_petri("I", "R", "rec")
+
+w_seir <- catlab::uwd(
+  outer       = c("S", "E", "I", "R"),
+  exposure    = c("S", "I", "E"),
+  progression = c("E", "I"),
+  recovery    = c("I", "R")
+)
+seir <- oapply(w_seir, list(exposure, progression, recovery))
+seir_pn <- apex(seir)
+
+# 2. Type the SEIR model
+ont <- infectious_ontology()
+seir_typed <- typed_petri(seir_pn, ont,
+  species_types    = c(S = "Pop", E = "Pop", I = "Pop", R = "Pop"),
+  transition_types = c(exp = "infect", prog = "disease", rec = "disease")
+)
+seir_aug <- add_reflexives(seir_typed, list(
+  S = "strata", E = "strata", I = "strata", R = "strata"
+))
+
+# 3. Define 3 age groups
+age3 <- labelled_petri_net(
+  c("Ch", "Ad", "El"),
+  aging_CA = "Ch" %=>% "Ad",
+  aging_AE = "Ad" %=>% "El"
+)
+age3_typed <- typed_petri(age3, ont,
+  species_types    = c(Ch = "Pop", Ad = "Pop", El = "Pop"),
+  transition_types = c(aging_CA = "strata", aging_AE = "strata")
+)
+age3_aug <- add_reflexives(age3_typed, list(
+  Ch = c("infect", "disease"),
+  Ad = c("infect", "disease"),
+  El = c("infect", "disease")
+))
+
+# 4. Stratify
+seir_age <- seir_aug %x% age3_aug
+cat("Species:", length(species_names(seir_age)), "\n")
+cat(paste(species_names(seir_age), collapse = ", "), "\n\n")
+cat("Transitions:", length(transition_names(seir_age)), "\n")
+cat(paste(transition_names(seir_age), collapse = ", "), "\n")
+```
+
+```{r seir-age-diagram}
+plot_petri(seir_age)
+```
+
+This produces a 12-species, 17-transition model from a 3-line
+composition and a 3-line stratification specification.
+
+```{r seir-age-code}
+cat(pn_to_odin(seir_age, "ode"))
+```
+
+## Performance note
+
+The algebraic overhead is purely at model construction time (R-level
+manipulation of ACSet data structures). Once `pn_to_odin()` generates the
+code and odin2 compiles it to C++, simulation performance is identical to
+hand-written models.
+
+For a 12-species model, construction takes < 1 ms:
+
+```{r benchmark}
+system.time({
+  for (i in 1:100) {
+    typed_product(seir_aug, age3_aug)
+  }
+})
+```
+
+## Summary
+
+| Technique | Use case | Functions |
+|-----------|----------|-----------|
+| **Morphisms** | Type systems, ontologies | `typed_petri()`, `flatten()` |
+| **Migration** | Schema transformation | `catlab::delta_migrate()` |
+| **Staged infection** | Non-exponential distributions | Programmatic PN construction |
+| **Multi-component** | Complex disease models | `oapply()`, `compose()` |
+| **Composition + stratification** | Modular, scaled models | `%o%` + `%x%` |

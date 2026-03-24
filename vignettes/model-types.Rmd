@@ -1,0 +1,349 @@
+---
+title: "Model types: ODE, DDE, stochastic, and discrete"
+author: "Simon Frost"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{Model types: ODE, DDE, stochastic, and discrete}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+set.seed(42)
+```
+
+## Introduction
+
+A single Petri net can generate odin2 code for four different model types,
+following the framework of
+[AlgebraicDynamics.jl](https://algebraicjulia.github.io/AlgebraicDynamics.jl/).
+Each type uses the same stoichiometry but differs in how the dynamics
+are computed.
+
+| Type | odin2 keyword | Time | Randomness |
+|------|---------------|------|------------|
+| **ODE** | `deriv()` | Continuous | Deterministic |
+| **DDE** | `deriv()` + `delay()` | Continuous | Deterministic |
+| **Stochastic** | `update()` + `Binomial()` | Discrete | Stochastic |
+| **Discrete** | `update()` | Discrete | Deterministic |
+
+```{r setup}
+library(algebraicodin)
+```
+
+We use the standard SIR model throughout:
+
+```{r sir}
+sir <- labelled_petri_net(
+  c("S", "I", "R"),
+  inf = c("S", "I") %=>% c("I", "I"),
+  rec = "I" %=>% "R"
+)
+```
+
+```{r sir-diagram}
+plot_petri(sir)
+```
+
+## ODE (continuous deterministic)
+
+The default model type. Uses `deriv()` to define continuous derivatives
+solved by numerical integration:
+
+```{r ode}
+cat(pn_to_odin(sir, "ode"))
+```
+
+```{r ode-run, fig.width = 6, fig.height = 4}
+gen <- odin2::odin(pn_to_odin(sir, "ode"))
+pars <- list(inf = 0.0005, rec = 0.25, S0 = 990, I0 = 10, R0 = 0)
+sys <- dust2::dust_system_create(gen, pars, n_particles = 1)
+dust2::dust_system_set_state_initial(sys)
+t_ode <- seq(0, 40, by = 0.1)
+y_ode <- dust2::dust_system_simulate(sys, t_ode)
+```
+
+### Hand-written comparison
+
+```{r ode-hw}
+ode_handwritten <- "
+inf <- parameter()
+rec <- parameter()
+S0 <- parameter()
+I0 <- parameter()
+R0 <- parameter()
+initial(S) <- S0
+initial(I) <- I0
+initial(R) <- R0
+deriv(S) <- -inf * S * I
+deriv(I) <- inf * S * I - rec * I
+deriv(R) <- rec * I
+"
+gen_hw <- odin2::odin(ode_handwritten)
+sys_hw <- dust2::dust_system_create(gen_hw, pars, n_particles = 1)
+dust2::dust_system_set_state_initial(sys_hw)
+y_hw <- dust2::dust_system_simulate(sys_hw, t_ode)
+cat("ODE max diff:", max(abs(y_ode - y_hw)), "\n")
+```
+
+## DDE (delay differential equations)
+
+DDEs introduce delays into the dynamics. In epidemiology, this can model
+a fixed incubation period or delayed immune response.
+
+The `delays` argument specifies which transitions use delayed values and
+the delay time (`tau`):
+
+```{r dde}
+dde_code <- pn_to_odin(sir, "dde", delays = list(
+  inf = list(tau = 5, species = "I")
+))
+cat(dde_code)
+```
+
+The infection rate now uses `delay(I, 5)` instead of the current value of
+I, meaning that infectiousness depends on the state 5 time units in the
+past.
+
+### Hand-written comparison
+
+```{r dde-hw}
+dde_handwritten <- "
+inf <- parameter()
+rec <- parameter()
+S0 <- parameter()
+I0 <- parameter()
+R0 <- parameter()
+initial(S) <- S0
+initial(I) <- I0
+initial(R) <- R0
+I_delayed <- delay(I, 5)
+deriv(S) <- -inf * S * I_delayed
+deriv(I) <- inf * S * I_delayed - rec * I
+deriv(R) <- rec * I
+"
+```
+
+```{r dde-run, fig.width = 6, fig.height = 4}
+gen_dde <- odin2::odin(dde_code)
+pars_dde <- list(inf = 0.0005, rec = 0.25, S0 = 990, I0 = 10, R0 = 0)
+sys_dde <- dust2::dust_system_create(gen_dde, pars_dde, n_particles = 1)
+dust2::dust_system_set_state_initial(sys_dde)
+y_dde <- dust2::dust_system_simulate(sys_dde, t_ode)
+
+gen_hw2 <- odin2::odin(dde_handwritten)
+sys_hw2 <- dust2::dust_system_create(gen_hw2, pars_dde, n_particles = 1)
+dust2::dust_system_set_state_initial(sys_hw2)
+y_hw2 <- dust2::dust_system_simulate(sys_hw2, t_ode)
+cat("DDE max diff:", max(abs(y_dde - y_hw2)), "\n")
+```
+
+```{r dde-plot, fig.width = 6, fig.height = 4}
+library(ggplot2)
+df <- data.frame(
+  time = rep(t_ode, 2),
+  I = c(y_ode[2, ], y_dde[2, ]),
+  model = rep(c("ODE", "DDE (tau=5)"), each = length(t_ode))
+)
+ggplot(df, aes(time, I, colour = model)) +
+  geom_line(linewidth = 0.8) +
+  labs(title = "Effect of delay on infection dynamics",
+       x = "Time", y = "Infectious (I)") +
+  theme_minimal()
+```
+
+The delay shifts the epidemic peak later and reduces its height, as the
+infection rate responds to historical rather than current infectiousness.
+
+## Stochastic (discrete-time)
+
+The stochastic model uses `Binomial()` draws for each transition,
+modelling demographic stochasticity:
+
+```{r stochastic}
+cat(pn_to_odin(sir, "stochastic"))
+```
+
+Key features:
+- Transition probabilities: $p = 1 - e^{-\text{rate} \cdot dt}$
+- Draws: `Binomial(substrate, probability)`
+- Update equations use draws instead of rates
+
+### Hand-written comparison
+
+```{r stoch-hw}
+stoch_handwritten <- "
+inf <- parameter()
+rec <- parameter()
+S0 <- parameter()
+I0 <- parameter()
+R0 <- parameter()
+initial(S) <- S0
+initial(I) <- I0
+initial(R) <- R0
+p_inf <- 1 - exp(-(inf * I) * dt)
+n_inf <- Binomial(S, p_inf)
+p_rec <- 1 - exp(-(rec) * dt)
+n_rec <- Binomial(I, p_rec)
+update(S) <- S - n_inf
+update(I) <- I + n_inf - n_rec
+update(R) <- R + n_rec
+"
+```
+
+```{r stoch-run, fig.width = 6, fig.height = 4}
+gen_stoch <- odin2::odin(pn_to_odin(sir, "stochastic"))
+pars_stoch <- list(inf = 0.0005, rec = 0.25,
+                   S0 = 990, I0 = 10, R0 = 0)
+sys_stoch <- dust2::dust_system_create(gen_stoch, pars_stoch, n_particles = 10,
+                                        seed = 42, dt = 1)
+dust2::dust_system_set_state_initial(sys_stoch)
+t_disc <- seq(0L, 40L, by = 1L)
+y_stoch <- dust2::dust_system_simulate(sys_stoch, t_disc)
+
+# Plot multiple realisations
+dfs <- do.call(rbind, lapply(1:10, function(p) {
+  data.frame(time = t_disc, I = y_stoch[2, p, ], particle = p)
+}))
+ggplot(dfs, aes(time, I, group = particle)) +
+  geom_line(alpha = 0.5, colour = "steelblue") +
+  geom_line(data = data.frame(time = t_ode, I = y_ode[2, ]),
+            aes(group = NULL), colour = "red", linewidth = 1) +
+  labs(title = "Stochastic SIR (10 realisations) vs ODE (red)",
+       x = "Time", y = "Infectious (I)") +
+  theme_minimal()
+```
+
+## Discrete deterministic (Euler method)
+
+The discrete deterministic model uses a forward Euler step, useful for
+comparison with the stochastic model or when discrete-time dynamics are
+desired:
+
+```{r discrete}
+cat(pn_to_odin(sir, "discrete"))
+```
+
+### Hand-written comparison
+
+```{r disc-hw}
+disc_handwritten <- "
+inf <- parameter()
+rec <- parameter()
+S0 <- parameter()
+I0 <- parameter()
+R0 <- parameter()
+initial(S) <- S0
+initial(I) <- I0
+initial(R) <- R0
+rate_inf <- inf * S * I
+rate_rec <- rec * I
+update(S) <- S - dt * rate_inf
+update(I) <- I + dt * rate_inf - dt * rate_rec
+update(R) <- R + dt * rate_rec
+"
+gen_disc <- odin2::odin(pn_to_odin(sir, "discrete"))
+gen_hw3 <- odin2::odin(disc_handwritten)
+
+pars_disc <- list(inf = 0.0005, rec = 0.25,
+                  S0 = 990, I0 = 10, R0 = 0)
+sys_disc <- dust2::dust_system_create(gen_disc, pars_disc, n_particles = 1, dt = 1)
+dust2::dust_system_set_state_initial(sys_disc)
+t_int <- seq(0L, 40L, by = 1L)
+y_disc <- dust2::dust_system_simulate(sys_disc, t_int)
+
+sys_hw3 <- dust2::dust_system_create(gen_hw3, pars_disc, n_particles = 1, dt = 1)
+dust2::dust_system_set_state_initial(sys_hw3)
+y_hw3 <- dust2::dust_system_simulate(sys_hw3, t_int)
+cat("Discrete max diff:", max(abs(y_disc - y_hw3)), "\n")
+```
+
+## ResourceSharer and Machine types
+
+For programmatic manipulation of dynamical systems (rather than code
+generation), algebraicodin provides `ResourceSharer` and `Machine`
+classes following AlgebraicDynamics.jl:
+
+```{r resource-sharer}
+rs <- petri_to_continuous(sir)
+rs@system_type
+rs@nstates
+rs@state_names
+```
+
+Evaluate the vector field at a given state:
+
+```{r eval-dynamics}
+u <- c(990, 10, 0)
+p <- list(inf = 0.0005, rec = 0.25)
+eval_dynamics(rs, u, p, t = 0)
+```
+
+## Euler approximation
+
+Convert a continuous system to discrete via forward Euler:
+
+```{r euler}
+rs_disc <- euler_approx(rs, h = 0.1)
+rs_disc@system_type
+
+# One Euler step
+u_next <- eval_dynamics(rs_disc, u, p, t = 0)
+cat("u_next:", u_next, "\n")
+cat("u + 0.1 * f(u):", u + 0.1 * eval_dynamics(rs, u, p, t = 0), "\n")
+```
+
+## All four types from one Petri net
+
+```{r all-four, fig.width = 7, fig.height = 5}
+# Run all four model types
+run_model <- function(code, pars, times, type) {
+  gen <- odin2::odin(code)
+  is_discrete <- type %in% c("Stochastic", "Discrete")
+  args <- list(generator = gen, pars = pars, n_particles = 1L,
+               deterministic = (type != "Stochastic"), seed = 42L)
+  if (is_discrete) args$dt <- 1
+  sys <- do.call(dust2::dust_system_create, args)
+  dust2::dust_system_set_state_initial(sys)
+  y <- dust2::dust_system_simulate(sys, times)
+  data.frame(time = times, I = y[2, ], type = type)
+}
+
+pars_cont <- list(inf = 0.0005, rec = 0.25, S0 = 990, I0 = 10, R0 = 0)
+pars_disc <- pars_cont
+
+dde_delays <- list(inf = list(tau = 5, species = "I"))
+
+df_all <- rbind(
+  run_model(pn_to_odin(sir, "ode"), pars_cont, t_ode, "ODE"),
+  run_model(pn_to_odin(sir, "dde", delays = dde_delays), pars_cont, t_ode, "DDE"),
+  run_model(pn_to_odin(sir, "stochastic"), pars_disc, t_disc, "Stochastic"),
+  run_model(pn_to_odin(sir, "discrete"), pars_disc, t_disc, "Discrete")
+)
+
+ggplot(df_all, aes(time, I, colour = type)) +
+  geom_line(linewidth = 0.8) +
+  labs(title = "SIR model: four types from one Petri net",
+       x = "Time", y = "Infectious (I)", colour = "Model type") +
+  theme_minimal()
+```
+
+## Summary
+
+| Type | `pn_to_odin()` | Use case |
+|------|-------------|----------|
+| `"ode"` | `deriv()` | Standard deterministic dynamics |
+| `"dde"` | `deriv()` + `delay()` | Fixed delays (incubation, immunity) |
+| `"stochastic"` | `update()` + `Binomial()` | Demographic stochasticity |
+| `"discrete"` | `update()` (Euler) | Discrete-time deterministic |
+
+The Petri net is the single source of truth. Changing the model type is a
+one-line change to `pn_to_odin(sir, type = ...)`, and the stoichiometry
+remains consistent across all four formulations.

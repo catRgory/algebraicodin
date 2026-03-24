@@ -1,0 +1,24 @@
+# R package artifacts
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+src/*.o
+src/*.so
+src/*.dll
+# Package build artifacts
+*.tar.gz
+*.Rcheck/
+# OS files
+.DS_Store
+Thumbs.db
+# IDE
+.vscode/
+.idea/
+# Rendered vignettes
+inst/doc/
+vignettes/*.html
+vignettes/*.R
+# Man pages auto-generated (if using roxygen)
+# man/*.Rd

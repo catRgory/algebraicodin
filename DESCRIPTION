@@ -1,0 +1,48 @@
+Package: algebraicodin
+Title: Compositional Epidemiological Modeling with odin2
+Version: 0.0.1
+Authors@R:
+    person("Simon", "Frost", email = "sdwfrost@gmail.com",
+           role = c("aut", "cre"), comment = c(ORCID = "0000-0002-5207-9879"))
+Description: Compositional model building using applied category theory,
+    targeting the odin2 DSL for high-performance simulation via dust2.
+    Supports Petri nets, stock-flow diagrams, open systems, and
+    composition via undirected wiring diagrams. Generates both
+    deterministic (ODE) and stochastic (discrete-time) odin2 code.
+    Port of AlgebraicPetri.jl and StockFlow.jl from the AlgebraicJulia
+    ecosystem.
+License: MIT + file LICENSE
+URL: https://github.com/catRgory/algebraicodin
+BugReports: https://github.com/catRgory/algebraicodin/issues
+Imports:
+    acsets,
+    catlab,
+    cli,
+    rlang (>= 1.1.0),
+    S7 (>= 0.2.0)
+Suggests:
+    DiagrammeR,
+    ggplot2,
+    knitr,
+    odin2,
+    dust2,
+    deSolve,
+    rmarkdown,
+    testthat (>= 3.0.0)
+VignetteBuilder: knitr
+Config/testthat/edition: 3
+Collate:
+    'petri.R'
+    'open.R'
+    'matrices.R'
+    'fitting.R'
+    'to_odin.R'
+    'epi.R'
+    'dynam.R'
+    'stockflow.R'
+    'stratify.R'
+    'operators.R'
+    'plot.R'
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2

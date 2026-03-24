@@ -1,0 +1,283 @@
+---
+title: "Compositional modeling"
+author: "Simon Frost"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{Compositional modeling}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Introduction
+
+The central idea of algebraicodin is **compositional modeling**: build
+complex models by assembling reusable components. Instead of writing a
+monolithic SIR model, we define *infection* and *recovery* as separate
+**open Petri nets**, then compose them by declaring how they share
+species.
+
+This approach mirrors the mathematical framework of
+[AlgebraicPetri.jl](https://algebraicjulia.github.io/AlgebraicPetri.jl/)
+and uses **undirected wiring diagrams** (UWDs) from applied category
+theory to specify the composition pattern.
+
+```{r setup}
+library(algebraicodin)
+```
+
+## Building blocks
+
+An **open Petri net** is a Petri net with designated *legs*—species that
+are exposed for composition. The package provides helpers for common
+epidemiological transitions:
+
+```{r blocks}
+# Infection: S + I → I + I (frequency-dependent transmission)
+infection <- exposure_petri("S", "I", "I", "inf")
+
+# Recovery: I → R (spontaneous transition)
+recovery <- spontaneous_petri("I", "R", "rec")
+```
+
+Each component is self-contained with its own species and transitions.
+The legs expose species that will be identified during composition.
+
+```{r blocks-diagram, fig.show = "hold"}
+plot_petri(infection)
+plot_petri(recovery)
+```
+
+## Composing with the `%o%` operator
+
+The simplest way to compose two open Petri nets is the `%o%` operator,
+which automatically identifies species with matching names:
+
+```{r compose-op}
+sir_composed <- infection %o% recovery
+species_names(apex(sir_composed))
+transition_names(apex(sir_composed))
+```
+
+Species "I" appears in both components, so it gets identified (shared).
+The result is the standard SIR model.
+
+```{r compose-diagram}
+plot_petri(sir_composed)
+```
+
+```{r compose-odin}
+sir_code <- pn_to_odin(apex(sir_composed), "ode")
+cat(sir_code)
+```
+
+## Composing with wiring diagrams
+
+For more control, define an explicit **undirected wiring diagram** (UWD)
+and use `oapply()`. The UWD specifies *junctions* (shared species) and
+*boxes* (components):
+
+```{r uwd-sir}
+w_sir <- catlab::uwd(
+  outer = c("S", "I", "R"),
+  infection = c("S", "I"),
+  recovery  = c("I", "R")
+)
+sir_via_uwd <- oapply(w_sir, list(infection, recovery))
+species_names(apex(sir_via_uwd))
+```
+
+The UWD approach is equivalent to `%o%` for two components but
+generalises naturally to more complex diagrams.
+
+```{r uwd-sir-diagram}
+plot_uwd(w_sir)
+```
+
+## Extending to SEIR
+
+Adding an exposed compartment requires a third component—*progression*
+from E to I:
+
+```{r seir}
+# Exposure: S + I → E + I (infectious contact produces exposed, not infectious)
+exposure <- exposure_petri("S", "I", "E", "exp")
+
+# Progression: E → I
+progression <- spontaneous_petri("E", "I", "prog")
+
+# Compose with explicit UWD
+w_seir <- catlab::uwd(
+  outer    = c("S", "E", "I", "R"),
+  exposure = c("S", "I", "E"),
+  progression  = c("E", "I"),
+  recovery = c("I", "R")
+)
+seir <- oapply(w_seir, list(exposure, progression, recovery))
+species_names(apex(seir))
+transition_names(apex(seir))
+```
+
+The wiring diagram shows how the three components share species:
+
+```{r seir-diagram, fig.show = "hold"}
+plot_uwd(w_seir)
+plot_petri(seir)
+```
+
+```{r seir-odin}
+cat(pn_to_odin(apex(seir), "ode"))
+```
+
+## Comparison: composed vs hand-written SEIR
+
+The hand-written odin2 SEIR model:
+
+```{r seir-handwritten}
+seir_handwritten <- "
+exp <- parameter()
+prog <- parameter()
+rec <- parameter()
+S0 <- parameter()
+E0 <- parameter()
+I0 <- parameter()
+R0 <- parameter()
+initial(S) <- S0
+initial(E) <- E0
+initial(I) <- I0
+initial(R) <- R0
+rate_exp <- exp * S * I
+rate_prog <- prog * E
+rate_rec <- rec * I
+deriv(S) <- -rate_exp
+deriv(E) <- rate_exp - rate_prog
+deriv(I) <- rate_prog - rate_rec
+deriv(R) <- rate_rec
+"
+```
+
+Let us run both and verify they produce identical trajectories:
+
+```{r seir-compare}
+# Algebraic version
+gen_alg <- odin2::odin(pn_to_odin(apex(seir), "ode"))
+pars <- list(exp = 0.001, prog = 0.2, rec = 0.1,
+             S0 = 990, E0 = 0, I0 = 10, R0 = 0)
+sys_alg <- dust2::dust_system_create(gen_alg, pars, n_particles = 1)
+dust2::dust_system_set_state_initial(sys_alg)
+t <- seq(0, 100, by = 0.5)
+y_alg <- dust2::dust_system_simulate(sys_alg, t)
+
+# Hand-written version
+gen_hw <- odin2::odin(seir_handwritten)
+sys_hw <- dust2::dust_system_create(gen_hw, pars, n_particles = 1)
+dust2::dust_system_set_state_initial(sys_hw)
+y_hw <- dust2::dust_system_simulate(sys_hw, t)
+
+cat("Max absolute difference:", max(abs(y_alg - y_hw)), "\n")
+```
+
+The outputs match exactly—both compile to the same C++ system.
+
+## Adding vaccination: SIRV
+
+We can extend SIR with a vaccination transition (S → R at rate `vac`):
+
+```{r sirv}
+vaccination <- spontaneous_petri("S", "R", "vac")
+
+w_sirv <- catlab::uwd(
+  outer      = c("S", "I", "R"),
+  infection  = c("S", "I"),
+  recovery   = c("I", "R"),
+  vaccination = c("S", "R")
+)
+sirv <- oapply(w_sirv, list(infection, recovery, vaccination))
+cat(pn_to_odin(apex(sirv), "ode"))
+```
+
+```{r sirv-diagram, fig.show = "hold"}
+plot_uwd(w_sirv)
+plot_petri(sirv)
+```
+
+```{r sirv-run, fig.width = 6, fig.height = 4}
+gen <- odin2::odin(pn_to_odin(apex(sirv), "ode"))
+pars <- list(inf = 0.0005, rec = 0.25, vac = 0.05,
+             S0 = 990, I0 = 10, R0 = 0)
+sys <- dust2::dust_system_create(gen, pars, n_particles = 1)
+dust2::dust_system_set_state_initial(sys)
+y <- dust2::dust_system_simulate(sys, t)
+
+df <- data.frame(
+  time = rep(t, 3),
+  value = c(y[1, ], y[2, ], y[3, ]),
+  compartment = rep(c("S", "I", "R"), each = length(t))
+)
+library(ggplot2)
+ggplot(df, aes(time, value, colour = compartment)) +
+  geom_line(linewidth = 0.8) +
+  labs(title = "SIRV model (composed from 3 components)",
+       x = "Time", y = "Population", colour = "Compartment") +
+  theme_minimal()
+```
+
+## Using the epidemiology dictionary
+
+For convenience, `epi_dict()` provides pre-built components for common
+transitions:
+
+```{r epi-dict}
+dict <- epi_dict()
+names(dict)
+```
+
+You can compose a model directly from the dictionary using `compose_epi()`:
+
+```{r compose-epi}
+w <- catlab::uwd(
+  outer     = c("S", "I", "R"),
+  infection = c("S", "I"),
+  recovery  = c("I", "R")
+)
+sir <- compose_epi(w, dict, c("infection", "recovery"))
+species_names(apex(sir))
+```
+
+## Composing more than two components
+
+The `compose()` function chains multiple `%o%` operations:
+
+```{r compose-multi}
+sirh <- compose(
+  exposure_petri("S", "I", "I", "inf"),
+  spontaneous_petri("I", "R", "rec"),
+  spontaneous_petri("I", "H", "hosp"),
+  spontaneous_petri("H", "R", "hosp_rec")
+)
+species_names(apex(sirh))
+transition_names(apex(sirh))
+```
+
+## Summary
+
+| Method | Syntax | Best for |
+|--------|--------|----------|
+| `%o%` | `a %o% b` | Quick binary composition |
+| `oapply()` | `oapply(uwd, components)` | Full control via wiring diagrams |
+| `compose()` | `compose(a, b, c)` | Chaining multiple components |
+| `compose_epi()` | `compose_epi(uwd, dict, names)` | Dictionary-based workflows |
+
+The compositional approach ensures that every shared species is correctly
+identified and that stoichiometry is preserved across components. For
+stratification by age, risk, or vaccination status, see
+`vignette("stratification")`.
