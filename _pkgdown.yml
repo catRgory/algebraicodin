@@ -60,6 +60,7 @@ reference:
       - compose_open
       - oapply
       - oapply_dynam
+      - oapply_machine
       - sf_oapply
       - nports
       - apex
