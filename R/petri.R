@@ -47,12 +47,27 @@ SchReactionNet <- acsets::BasicSchema(
 
 #' PetriNet ACSet type (unlabelled)
 #' @param ... Arguments passed to the ACSet constructor
+#' @examples
+#' pn <- PetriNet()
+#' s1 <- acsets::add_part(pn, "S")
+#' t1 <- acsets::add_part(pn, "T")
+#' acsets::add_part(pn, "I", is = s1, it = t1)
+#' acsets::add_part(pn, "O", os = s1, ot = t1)
+#' acsets::nparts(pn, "S") # 1
 #' @export
 PetriNet <- acsets::acset_type(SchPetriNet, name = "PetriNet",
                                 index = c("is", "it", "os", "ot"))
 
 #' LabelledPetriNet ACSet type
 #' @param ... Arguments passed to the ACSet constructor
+#' @examples
+#' pn <- LabelledPetriNet()
+#' s1 <- acsets::add_part(pn, "S", sname = "S")
+#' s2 <- acsets::add_part(pn, "S", sname = "I")
+#' t1 <- acsets::add_part(pn, "T", tname = "inf")
+#' acsets::add_part(pn, "I", is = s1, it = t1)
+#' acsets::add_part(pn, "O", os = s2, ot = t1)
+#' species_names(pn) # c("S", "I")
 #' @export
 LabelledPetriNet <- acsets::acset_type(SchLabelledPetriNet,
                                         name = "LabelledPetriNet",
@@ -60,6 +75,13 @@ LabelledPetriNet <- acsets::acset_type(SchLabelledPetriNet,
 
 #' ReactionNet ACSet type (labelled with rates and concentrations)
 #' @param ... Arguments passed to the ACSet constructor
+#' @examples
+#' rn <- ReactionNet()
+#' s1 <- acsets::add_part(rn, "S", sname = "S", concentration = 990)
+#' s2 <- acsets::add_part(rn, "S", sname = "I", concentration = 10)
+#' t1 <- acsets::add_part(rn, "T", tname = "inf", rate = 0.001)
+#' acsets::add_part(rn, "I", is = s1, it = t1)
+#' acsets::add_part(rn, "O", os = s2, ot = t1)
 #' @export
 ReactionNet <- acsets::acset_type(SchReactionNet, name = "ReactionNet",
                                    index = c("is", "it", "os", "ot"))
@@ -69,6 +91,14 @@ ReactionNet <- acsets::acset_type(SchReactionNet, name = "ReactionNet",
 #' @param inputs Character vector of input species names
 #' @param outputs Character vector of output species names
 #' @returns A list with `inputs` and `outputs`
+#' @examples
+#' # Infection: S + I -> I + I
+#' inf <- c("S", "I") %=>% c("I", "I")
+#' inf$inputs  # c("S", "I")
+#' inf$outputs # c("I", "I")
+#'
+#' # Recovery: I -> R
+#' rec <- "I" %=>% "R"
 #' @export
 `%=>%` <- function(inputs, outputs) {
   list(inputs = inputs, outputs = outputs)
@@ -80,6 +110,22 @@ ReactionNet <- acsets::acset_type(SchReactionNet, name = "ReactionNet",
 #' @param ... Named transition specs: `name = inputs %=>% outputs`
 #'   where inputs/outputs are character vectors of species names
 #' @returns A LabelledPetriNet ACSet
+#' @examples
+#' # SIR model as a Petri net
+#' sir <- labelled_petri_net(
+#'   c("S", "I", "R"),
+#'   inf = c("S", "I") %=>% c("I", "I"),
+#'   rec = "I" %=>% "R"
+#' )
+#' species_names(sir)    # c("S", "I", "R")
+#' transition_names(sir) # c("inf", "rec")
+#'
+#' # SIS model (no recovery compartment needed)
+#' sis <- labelled_petri_net(
+#'   c("S", "I"),
+#'   inf = c("S", "I") %=>% c("I", "I"),
+#'   rec = "I" %=>% "S"
+#' )
 #' @export
 labelled_petri_net <- function(species, ...) {
   transitions <- list(...)
@@ -111,6 +157,14 @@ labelled_petri_net <- function(species, ...) {
 #' Get species names from a Petri net
 #' @param pn A Petri net ACSet (or TypedPetriNet)
 #' @returns Character vector of species names
+#' @examples
+#' sir <- labelled_petri_net(
+#'   c("S", "I", "R"),
+#'   inf = c("S", "I") %=>% c("I", "I"),
+#'   rec = "I" %=>% "R"
+#' )
+#' species_names(sir)    # c("S", "I", "R")
+#' transition_names(sir) # c("inf", "rec")
 #' @export
 species_names <- function(pn) {
   if (S7::S7_inherits(pn, TypedPetriNet)) pn <- pn@pn

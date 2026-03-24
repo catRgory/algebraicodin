@@ -55,6 +55,10 @@ TypedPetriNet <- S7::new_class("TypedPetriNet",
 #' }
 #'
 #' @returns A LabelledPetriNet ACSet
+#' @examples
+#' onto <- infectious_ontology()
+#' species_names(onto)    # "Pop"
+#' transition_names(onto) # c("infect", "disease", "strata")
 #' @export
 infectious_ontology <- function() {
   pn <- LabelledPetriNet()
@@ -89,6 +93,19 @@ infectious_ontology <- function() {
 #' @param transition_types Named character vector mapping transition names
 #'   to type system transition names, e.g. \code{c(inf = "infect", rec = "disease")}
 #' @returns A \code{TypedPetriNet}
+#' @examples
+#' # Type an SIR model over the infectious disease ontology
+#' sir <- labelled_petri_net(
+#'   c("S", "I", "R"),
+#'   inf = c("S", "I") %=>% c("I", "I"),
+#'   rec = "I" %=>% "R"
+#' )
+#' onto <- infectious_ontology()
+#' tp <- typed_petri(sir, onto,
+#'   species_types = c(S = "Pop", I = "Pop", R = "Pop"),
+#'   transition_types = c(inf = "infect", rec = "disease")
+#' )
+#' species_names(tp) # c("S", "I", "R")
 #' @export
 typed_petri <- function(pn, type_system,
                         species_types = NULL,
@@ -202,6 +219,22 @@ compute_arc_maps <- function(pn, type_system, species_map, transition_map) {
 #'   of transition type names, e.g.
 #'   \code{list(S = "strata", I = "strata", R = "strata")}
 #' @returns A new \code{TypedPetriNet} with reflexive transitions added
+#' @examples
+#' sir <- labelled_petri_net(
+#'   c("S", "I", "R"),
+#'   inf = c("S", "I") %=>% c("I", "I"),
+#'   rec = "I" %=>% "R"
+#' )
+#' onto <- infectious_ontology()
+#' tp <- typed_petri(sir, onto,
+#'   species_types = c(S = "Pop", I = "Pop", R = "Pop"),
+#'   transition_types = c(inf = "infect", rec = "disease")
+#' )
+#' # Add strata-type reflexives for each species
+#' tp_refl <- add_reflexives(tp, list(
+#'   S = "strata", I = "strata", R = "strata"
+#' ))
+#' transition_names(tp_refl)
 #' @export
 add_reflexives <- function(typed_pn, reflexives) {
   pn <- acsets::copy_acset(typed_pn@pn)
@@ -262,6 +295,34 @@ add_reflexives <- function(typed_pn, reflexives) {
 #'
 #' @param tp1,tp2 \code{TypedPetriNet} objects with the same type system
 #' @returns A \code{TypedPetriNet} (the stratified model)
+#' @examples
+#' # Stratify SIR by two age groups
+#' onto <- infectious_ontology()
+#'
+#' sir <- labelled_petri_net(
+#'   c("S", "I", "R"),
+#'   inf = c("S", "I") %=>% c("I", "I"),
+#'   rec = "I" %=>% "R"
+#' )
+#' tp_sir <- typed_petri(sir, onto,
+#'   species_types = c(S = "Pop", I = "Pop", R = "Pop"),
+#'   transition_types = c(inf = "infect", rec = "disease")
+#' )
+#' tp_sir <- add_reflexives(tp_sir, list(
+#'   S = "strata", I = "strata", R = "strata"
+#' ))
+#'
+#' ages <- labelled_petri_net(c("young", "old"), aging = "young" %=>% "old")
+#' tp_ages <- typed_petri(ages, onto,
+#'   species_types = c(young = "Pop", old = "Pop"),
+#'   transition_types = c(aging = "strata")
+#' )
+#' tp_ages <- add_reflexives(tp_ages, list(
+#'   young = c("infect", "disease"), old = c("infect", "disease")
+#' ))
+#'
+#' result <- typed_product(tp_sir, tp_ages)
+#' species_names(result) # e.g. S_young, S_old, I_young, ...
 #' @export
 typed_product <- function(tp1, tp2) {
   pn1 <- tp1@pn
@@ -392,5 +453,32 @@ flatten <- function(typed_pn) typed_pn@pn
 #' @param base A \code{TypedPetriNet} (the base model, e.g. SIR)
 #' @param strata A \code{TypedPetriNet} (the stratification model, e.g. age groups)
 #' @returns A \code{TypedPetriNet} (the stratified model)
+#' @examples
+#' # Same as typed_product(); see that function for a full example
+#' onto <- infectious_ontology()
+#' sir <- labelled_petri_net(
+#'   c("S", "I", "R"),
+#'   inf = c("S", "I") %=>% c("I", "I"),
+#'   rec = "I" %=>% "R"
+#' )
+#' tp_sir <- typed_petri(sir, onto,
+#'   species_types = c(S = "Pop", I = "Pop", R = "Pop"),
+#'   transition_types = c(inf = "infect", rec = "disease")
+#' )
+#' tp_sir <- add_reflexives(tp_sir, list(
+#'   S = "strata", I = "strata", R = "strata"
+#' ))
+#'
+#' ages <- labelled_petri_net(c("young", "old"), aging = "young" %=>% "old")
+#' tp_ages <- typed_petri(ages, onto,
+#'   species_types = c(young = "Pop", old = "Pop"),
+#'   transition_types = c(aging = "strata")
+#' )
+#' tp_ages <- add_reflexives(tp_ages, list(
+#'   young = c("infect", "disease"), old = c("infect", "disease")
+#' ))
+#'
+#' result <- stratify(tp_sir, tp_ages)
+#' species_names(result)
 #' @export
 stratify <- function(base, strata) typed_product(base, strata)

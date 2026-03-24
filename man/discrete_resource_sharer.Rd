@@ -30,3 +30,13 @@ Enables odin2 code generation via \code{rs_to_odin()}.}
 \description{
 Create a DiscreteResourceSharer
 }
+\examples{
+# Discrete logistic growth
+logistic <- discrete_resource_sharer(
+  dynamics_expr = list(
+    N = quote(N + r * N * (1 - N / K))
+  ),
+  params = c("r", "K")
+)
+logistic@system_type # "discrete"
+}

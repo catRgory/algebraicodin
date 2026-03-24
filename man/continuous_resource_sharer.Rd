@@ -33,3 +33,16 @@ A ResourceSharer with system_type = "continuous"
 \description{
 Create a ContinuousResourceSharer
 }
+\examples{
+# Lotka-Volterra predator-prey via symbolic expressions
+lv <- continuous_resource_sharer(
+  dynamics_expr = list(
+    prey = quote(alpha * prey - beta * prey * predator),
+    predator = quote(delta * prey * predator - gamma * predator)
+  ),
+  params = c("alpha", "beta", "delta", "gamma")
+)
+lv@system_type  # "continuous"
+lv@state_names  # c("prey", "predator")
+nports(lv)      # 2
+}

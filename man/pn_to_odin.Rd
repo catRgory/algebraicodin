@@ -47,3 +47,17 @@ A character string of odin2 DSL code
 \description{
 Generate odin2 code from a Petri net
 }
+\examples{
+sir <- labelled_petri_net(
+  c("S", "I", "R"),
+  inf = c("S", "I") \%=>\% c("I", "I"),
+  rec = "I" \%=>\% "R"
+)
+# Generate ODE code
+code <- pn_to_odin(sir, type = "ode")
+cat(code)
+
+# Generate stochastic discrete-time code
+code_stoch <- pn_to_odin(sir, type = "stochastic")
+cat(code_stoch)
+}

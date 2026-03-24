@@ -233,6 +233,15 @@ euler_approx <- function(rs, h = NULL) {
 #' Convert a Petri net to a ContinuousResourceSharer (ODE)
 #' @param pn A Petri net ACSet
 #' @returns A ResourceSharer with system_type "continuous"
+#' @examples
+#' sir <- labelled_petri_net(
+#'   c("S", "I", "R"),
+#'   inf = c("S", "I") %=>% c("I", "I"),
+#'   rec = "I" %=>% "R"
+#' )
+#' rs <- petri_to_continuous(sir)
+#' rs@system_type   # "continuous"
+#' rs@state_names   # c("S", "I", "R")
 #' @export
 petri_to_continuous <- function(pn) {
   tm <- transition_matrices(pn)
@@ -997,6 +1006,18 @@ dwd <- function(ninputs, noutputs, boxes, wires) {
 #'   Enables odin2 code generation via \code{rs_to_odin()}.
 #' @param params Character vector of parameter names used in dynamics_expr
 #' @returns A ResourceSharer with system_type = "continuous"
+#' @examples
+#' # Lotka-Volterra predator-prey via symbolic expressions
+#' lv <- continuous_resource_sharer(
+#'   dynamics_expr = list(
+#'     prey = quote(alpha * prey - beta * prey * predator),
+#'     predator = quote(delta * prey * predator - gamma * predator)
+#'   ),
+#'   params = c("alpha", "beta", "delta", "gamma")
+#' )
+#' lv@system_type  # "continuous"
+#' lv@state_names  # c("prey", "predator")
+#' nports(lv)      # 2
 #' @export
 continuous_resource_sharer <- function(nstates = NULL, dynamics = NULL,
                                         portmap = NULL,
@@ -1025,6 +1046,15 @@ continuous_resource_sharer <- function(nstates = NULL, dynamics = NULL,
 
 #' Create a DiscreteResourceSharer
 #' @inheritParams continuous_resource_sharer
+#' @examples
+#' # Discrete logistic growth
+#' logistic <- discrete_resource_sharer(
+#'   dynamics_expr = list(
+#'     N = quote(N + r * N * (1 - N / K))
+#'   ),
+#'   params = c("r", "K")
+#' )
+#' logistic@system_type # "discrete"
 #' @export
 discrete_resource_sharer <- function(nstates = NULL, dynamics = NULL,
                                       portmap = NULL,
@@ -1089,6 +1119,20 @@ delay_resource_sharer <- function(nstates, dynamics,
 #'   Use \code{input_1}, \code{input_2}, etc. for input port references.
 #' @param readout_expr Optional list of quoted expressions, one per output port
 #' @param params Character vector of parameter names
+#' @examples
+#' # Damped harmonic oscillator with external forcing
+#' osc <- continuous_machine(
+#'   ninputs = 1,
+#'   dynamics_expr = list(
+#'     x = quote(v),
+#'     v = quote(-k * x - c * v + input_1)
+#'   ),
+#'   readout_expr = list(quote(x)),
+#'   params = c("k", "c")
+#' )
+#' osc@ninputs    # 1
+#' osc@nstates    # 2
+#' osc@noutputs   # 1
 #' @export
 continuous_machine <- function(ninputs, nstates = NULL, noutputs = NULL,
                                 dynamics = NULL, readout = NULL,

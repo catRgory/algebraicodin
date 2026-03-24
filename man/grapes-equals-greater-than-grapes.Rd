@@ -17,3 +17,12 @@ A list with \code{inputs} and \code{outputs}
 \description{
 Define a Petri net transition: inputs to outputs
 }
+\examples{
+# Infection: S + I -> I + I
+inf <- c("S", "I") \%=>\% c("I", "I")
+inf$inputs  # c("S", "I")
+inf$outputs # c("I", "I")
+
+# Recovery: I -> R
+rec <- "I" \%=>\% "R"
+}

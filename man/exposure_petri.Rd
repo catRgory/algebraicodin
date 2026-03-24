@@ -21,3 +21,12 @@ An Open Petri net
 \description{
 Exposure/contact transition: A + B -> C + B (B catalyzes A -> C)
 }
+\examples{
+# Standard infection: S + I -> I + I
+inf <- exposure_petri("S", "I", "I", "inf")
+species_names(apex(inf)) # c("S", "I")
+
+# Exposure (SEIR): S + I -> E + I
+exp_petri <- exposure_petri("S", "I", "E", "exp")
+species_names(apex(exp_petri)) # c("S", "I", "E")
+}

@@ -12,3 +12,12 @@ LabelledPetriNet(...)
 \description{
 LabelledPetriNet ACSet type
 }
+\examples{
+pn <- LabelledPetriNet()
+s1 <- acsets::add_part(pn, "S", sname = "S")
+s2 <- acsets::add_part(pn, "S", sname = "I")
+t1 <- acsets::add_part(pn, "T", tname = "inf")
+acsets::add_part(pn, "I", is = s1, it = t1)
+acsets::add_part(pn, "O", os = s2, ot = t1)
+species_names(pn) # c("S", "I")
+}

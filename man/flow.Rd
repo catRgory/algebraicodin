@@ -19,3 +19,13 @@ A flow spec list
 \description{
 Create a flow specification
 }
+\examples{
+# Internal flow between stocks
+f1 <- flow(from = "S", to = "I", rate = quote(beta * S * I / N))
+
+# External inflow (birth)
+f2 <- flow(from = "cloud", to = "S", rate = quote(mu * N))
+
+# External outflow (death)
+f3 <- flow(from = "I", to = "cloud", rate = quote(mu * I))
+}

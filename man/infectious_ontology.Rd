@@ -17,3 +17,8 @@ Returns a type system (LabelledPetriNet) with:
 \code{disease} (Pop -> Pop), \code{strata} (Pop -> Pop)
 }
 }
+\examples{
+onto <- infectious_ontology()
+species_names(onto)    # "Pop"
+transition_names(onto) # c("infect", "disease", "strata")
+}

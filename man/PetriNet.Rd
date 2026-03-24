@@ -12,3 +12,11 @@ PetriNet(...)
 \description{
 PetriNet ACSet type (unlabelled)
 }
+\examples{
+pn <- PetriNet()
+s1 <- acsets::add_part(pn, "S")
+t1 <- acsets::add_part(pn, "T")
+acsets::add_part(pn, "I", is = s1, it = t1)
+acsets::add_part(pn, "O", os = s1, ot = t1)
+acsets::nparts(pn, "S") # 1
+}

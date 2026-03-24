@@ -15,3 +15,14 @@ A list with \code{input} and \code{output} matrices (species × transitions)
 \description{
 Extract input/output stoichiometry matrices
 }
+\examples{
+sir <- labelled_petri_net(
+  c("S", "I", "R"),
+  inf = c("S", "I") \%=>\% c("I", "I"),
+  rec = "I" \%=>\% "R"
+)
+tm <- transition_matrices(sir)
+tm$input         # species x transitions input matrix
+tm$output        # species x transitions output matrix
+tm$stoichiometry # net change: output - input
+}

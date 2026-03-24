@@ -15,3 +15,12 @@ Character vector of species names
 \description{
 Get species names from a Petri net
 }
+\examples{
+sir <- labelled_petri_net(
+  c("S", "I", "R"),
+  inf = c("S", "I") \%=>\% c("I", "I"),
+  rec = "I" \%=>\% "R"
+)
+species_names(sir)    # c("S", "I", "R")
+transition_names(sir) # c("inf", "rec")
+}

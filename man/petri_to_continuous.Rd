@@ -15,3 +15,13 @@ A ResourceSharer with system_type "continuous"
 \description{
 Convert a Petri net to a ContinuousResourceSharer (ODE)
 }
+\examples{
+sir <- labelled_petri_net(
+  c("S", "I", "R"),
+  inf = c("S", "I") \%=>\% c("I", "I"),
+  rec = "I" \%=>\% "R"
+)
+rs <- petri_to_continuous(sir)
+rs@system_type   # "continuous"
+rs@state_names   # c("S", "I", "R")
+}

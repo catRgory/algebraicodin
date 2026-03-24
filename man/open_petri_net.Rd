@@ -17,3 +17,11 @@ A catlab::StructuredCospan with interface_ob = "S"
 \description{
 Convenience wrapper around catlab::open_acset with interface_ob = "S".
 }
+\examples{
+sir <- labelled_petri_net(
+  c("S", "I", "R"),
+  inf = c("S", "I") \%=>\% c("I", "I"),
+  rec = "I" \%=>\% "R"
+)
+sc <- open_petri_net(sir, c(1L, 2L), c(2L, 3L))
+}

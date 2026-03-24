@@ -22,3 +22,16 @@ Character string of odin2 code
 \description{
 Generate odin2 code from a stock-flow model
 }
+\examples{
+sir_sf <- stock_and_flow(
+  stocks = c("S", "I", "R"),
+  flows = list(
+    inf = flow(from = "S", to = "I", rate = quote(beta * S * I / N)),
+    rec = flow(from = "I", to = "R", rate = quote(gamma * I))
+  ),
+  params = c("beta", "gamma"),
+  sums = list(N = c("S", "I", "R"))
+)
+code <- sf_to_odin(sir_sf, type = "ode")
+cat(code)
+}

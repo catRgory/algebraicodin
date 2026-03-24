@@ -21,3 +21,20 @@ Reflexive transitions are identity transitions that map a species to
 itself. They are required so that \code{typed_product} can pair
 transitions from one model with the corresponding species of the other.
 }
+\examples{
+sir <- labelled_petri_net(
+  c("S", "I", "R"),
+  inf = c("S", "I") \%=>\% c("I", "I"),
+  rec = "I" \%=>\% "R"
+)
+onto <- infectious_ontology()
+tp <- typed_petri(sir, onto,
+  species_types = c(S = "Pop", I = "Pop", R = "Pop"),
+  transition_types = c(inf = "infect", rec = "disease")
+)
+# Add strata-type reflexives for each species
+tp_refl <- add_reflexives(tp, list(
+  S = "strata", I = "strata", R = "strata"
+))
+transition_names(tp_refl)
+}

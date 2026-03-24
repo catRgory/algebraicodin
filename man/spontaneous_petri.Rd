@@ -19,3 +19,11 @@ An Open Petri net
 \description{
 Spontaneous transition: A -> B
 }
+\examples{
+# Recovery: I -> R
+rec <- spontaneous_petri("I", "R", "rec")
+species_names(apex(rec)) # c("I", "R")
+
+# Waning immunity: R -> S
+wan <- spontaneous_petri("R", "S", "wan")
+}

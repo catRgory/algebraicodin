@@ -19,3 +19,14 @@ An Open Petri net
 \description{
 Compose an epidemiological model from a UWD and dictionary
 }
+\examples{
+# Build SIR from epi building blocks
+d <- epi_dict()
+w <- catlab::uwd(
+  outer = c("S", "I", "R"),
+  infection = c("S", "I"),
+  recovery = c("I", "R")
+)
+sir <- compose_epi(w, d, c("infection", "recovery"))
+species_names(apex(sir)) # c("S", "I", "R")
+}

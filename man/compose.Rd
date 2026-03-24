@@ -16,3 +16,9 @@ An Open Petri net
 Convenience function for composing more than two Open Petri nets
 by iterative pairwise composition.
 }
+\examples{
+d <- epi_dict()
+# Build SEIR from three building blocks
+seir <- compose(d$exposure, d$progression, d$recovery)
+species_names(apex(seir)) # c("S", "I", "E", "R")
+}

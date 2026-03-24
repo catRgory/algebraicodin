@@ -23,3 +23,17 @@ A \code{TypedPetriNet}
 \description{
 Create a typed Petri net from type assignments
 }
+\examples{
+# Type an SIR model over the infectious disease ontology
+sir <- labelled_petri_net(
+  c("S", "I", "R"),
+  inf = c("S", "I") \%=>\% c("I", "I"),
+  rec = "I" \%=>\% "R"
+)
+onto <- infectious_ontology()
+tp <- typed_petri(sir, onto,
+  species_types = c(S = "Pop", I = "Pop", R = "Pop"),
+  transition_types = c(inf = "infect", rec = "disease")
+)
+species_names(tp) # c("S", "I", "R")
+}

@@ -10,6 +10,12 @@
 #'
 #' @param a,b Open Petri nets, or objects for \code{base::\%o\%}
 #' @returns An Open Petri net (if both are Open), or outer product otherwise
+#' @examples
+#' inf <- exposure_petri("S", "I", "I", "inf")
+#' rec <- spontaneous_petri("I", "R", "rec")
+#' # Compose by matching species "I"
+#' sir <- inf %o% rec
+#' species_names(apex(sir)) # c("S", "I", "R")
 #' @export
 `%o%` <- function(a, b) {
   if (S7::S7_inherits(a, Open) && S7::S7_inherits(b, Open)) {
@@ -43,6 +49,11 @@
 #'
 #' @param a,b Open Petri nets
 #' @returns An Open Petri net
+#' @examples
+#' inf <- exposure_petri("S", "I", "I", "inf")
+#' rec <- spontaneous_petri("I", "R", "rec")
+#' sir <- compose_open(inf, rec)
+#' species_names(apex(sir)) # c("S", "I", "R")
 #' @export
 compose_open <- function(a, b) {
   snames_a <- species_names(apex(a))
@@ -66,6 +77,11 @@ compose_open <- function(a, b) {
 #'
 #' @param ... Open Petri nets
 #' @returns An Open Petri net
+#' @examples
+#' d <- epi_dict()
+#' # Build SEIR from three building blocks
+#' seir <- compose(d$exposure, d$progression, d$recovery)
+#' species_names(apex(seir)) # c("S", "I", "E", "R")
 #' @export
 compose <- function(...) {
   components <- list(...)

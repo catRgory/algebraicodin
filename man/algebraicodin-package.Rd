@@ -12,6 +12,7 @@ Compositional model building using applied category theory, targeting the odin2 
 Useful links:
 \itemize{
   \item \url{https://github.com/catRgory/algebraicodin}
+  \item \url{https://catrgory.github.io/algebraicodin/}
   \item Report bugs at \url{https://github.com/catRgory/algebraicodin/issues}
 }
 

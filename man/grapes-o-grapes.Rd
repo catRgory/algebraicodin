@@ -20,3 +20,10 @@ identifying species with the same name, then calls \code{oapply}.
 When applied to non-Open arguments, falls through to \code{base::\%o\%}
 (outer product).
 }
+\examples{
+inf <- exposure_petri("S", "I", "I", "inf")
+rec <- spontaneous_petri("I", "R", "rec")
+# Compose by matching species "I"
+sir <- inf \%o\% rec
+species_names(apex(sir)) # c("S", "I", "R")
+}

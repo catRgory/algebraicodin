@@ -180,6 +180,19 @@ sf_pnames <- function(sf) {
 #' @param sums Named list of sum variable definitions:
 #'   \code{list(N = c("S", "I", "R"))} means N = S + I + R
 #' @returns A StockFlowModel
+#' @examples
+#' # SIR stock-flow model
+#' sir_sf <- stock_and_flow(
+#'   stocks = c("S", "I", "R"),
+#'   flows = list(
+#'     inf = flow(from = "S", to = "I", rate = quote(beta * S * I / N)),
+#'     rec = flow(from = "I", to = "R", rate = quote(gamma * I))
+#'   ),
+#'   params = c("beta", "gamma"),
+#'   sums = list(N = c("S", "I", "R"))
+#' )
+#' sf_snames(sir_sf) # c("S", "I", "R")
+#' sf_fnames(sir_sf) # c("inf", "rec")
 #' @export
 stock_and_flow <- function(stocks, flows, params = character(0),
                             sums = list()) {
@@ -281,6 +294,15 @@ stock_and_flow <- function(stocks, flows, params = character(0),
 #' @param to Target stock name (NULL or "cloud" for external outflow)
 #' @param rate Rate expression (quoted) or function(u, p, t)
 #' @returns A flow spec list
+#' @examples
+#' # Internal flow between stocks
+#' f1 <- flow(from = "S", to = "I", rate = quote(beta * S * I / N))
+#'
+#' # External inflow (birth)
+#' f2 <- flow(from = "cloud", to = "S", rate = quote(mu * N))
+#'
+#' # External outflow (death)
+#' f3 <- flow(from = "I", to = "cloud", rate = quote(mu * I))
 #' @export
 flow <- function(from = NULL, to = NULL, rate) {
   if (identical(from, "cloud")) from <- NULL
@@ -330,6 +352,19 @@ make_flow_fn <- function(expr, stocks, sv_names, params) {
 #' @param sf A StockFlowModel
 #' @returns A list with \code{inflow} and \code{outflow} matrices
 #'   (rows = flows, cols = stocks)
+#' @examples
+#' sir_sf <- stock_and_flow(
+#'   stocks = c("S", "I", "R"),
+#'   flows = list(
+#'     inf = flow(from = "S", to = "I", rate = quote(beta * S * I / N)),
+#'     rec = flow(from = "I", to = "R", rate = quote(gamma * I))
+#'   ),
+#'   params = c("beta", "gamma"),
+#'   sums = list(N = c("S", "I", "R"))
+#' )
+#' tm <- sf_transition_matrices(sir_sf)
+#' tm$inflow  # flows x stocks inflow matrix
+#' tm$outflow # flows x stocks outflow matrix
 #' @export
 sf_transition_matrices <- function(sf) {
   ac <- if (S7::S7_inherits(sf, StockFlowModel)) sf@acset else sf
@@ -367,6 +402,21 @@ sf_transition_matrices <- function(sf) {
 #'
 #' @param sf A StockFlowModel
 #' @returns A function with signature (t, state, parms) suitable for deSolve
+#' @examples
+#' sir_sf <- stock_and_flow(
+#'   stocks = c("S", "I", "R"),
+#'   flows = list(
+#'     inf = flow(from = "S", to = "I", rate = quote(beta * S * I / N)),
+#'     rec = flow(from = "I", to = "R", rate = quote(gamma * I))
+#'   ),
+#'   params = c("beta", "gamma"),
+#'   sums = list(N = c("S", "I", "R"))
+#' )
+#' vf <- sf_vectorfield(sir_sf)
+#' state <- c(S = 990, I = 10, R = 0)
+#' parms <- list(beta = 0.3, gamma = 0.1)
+#' dstate <- vf(0, state, parms)
+#' dstate[[1]] # derivatives: dS/dt, dI/dt, dR/dt
 #' @export
 sf_vectorfield <- function(sf) {
   ac <- sf@acset
@@ -432,6 +482,18 @@ sf_sum_variable_stocks <- function(sf) {
 #' @param compare Optional named list of observation specifications
 #'   (see [observe()])
 #' @returns Character string of odin2 code
+#' @examples
+#' sir_sf <- stock_and_flow(
+#'   stocks = c("S", "I", "R"),
+#'   flows = list(
+#'     inf = flow(from = "S", to = "I", rate = quote(beta * S * I / N)),
+#'     rec = flow(from = "I", to = "R", rate = quote(gamma * I))
+#'   ),
+#'   params = c("beta", "gamma"),
+#'   sums = list(N = c("S", "I", "R"))
+#' )
+#' code <- sf_to_odin(sir_sf, type = "ode")
+#' cat(code)
 #' @export
 sf_to_odin <- function(sf, type = "ode", initial = NULL, compare = NULL) {
   ac <- sf@acset
@@ -981,6 +1043,17 @@ sf_to_odin_array_system <- function(sf, type = "ode", initial = NULL,
 #' @param sf A StockFlowModel
 #' @param ... Character vectors of exposed stock names (one per foot/leg)
 #' @returns An OpenStockFlow object
+#' @examples
+#' sir_sf <- stock_and_flow(
+#'   stocks = c("S", "I", "R"),
+#'   flows = list(
+#'     inf = flow(from = "S", to = "I", rate = quote(beta * S * I / N)),
+#'     rec = flow(from = "I", to = "R", rate = quote(gamma * I))
+#'   ),
+#'   params = c("beta", "gamma"),
+#'   sums = list(N = c("S", "I", "R"))
+#' )
+#' open_sf <- open_stock_flow(sir_sf, c("S", "I", "R"))
 #' @export
 open_stock_flow <- function(sf, ...) {
   legs <- list(...)

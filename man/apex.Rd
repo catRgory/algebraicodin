@@ -15,3 +15,9 @@ A Petri net ACSet
 \description{
 Extract the closed Petri net from an Open Petri net
 }
+\examples{
+pn <- labelled_petri_net(c("S", "I"), inf = "S" \%=>\% "I")
+open_pn <- Open(pn)
+closed <- apex(open_pn)
+species_names(closed) # c("S", "I")
+}

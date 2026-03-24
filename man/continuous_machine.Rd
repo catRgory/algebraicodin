@@ -39,3 +39,18 @@ Use \code{input_1}, \code{input_2}, etc. for input port references.}
 \description{
 Create a ContinuousMachine
 }
+\examples{
+# Damped harmonic oscillator with external forcing
+osc <- continuous_machine(
+  ninputs = 1,
+  dynamics_expr = list(
+    x = quote(v),
+    v = quote(-k * x - c * v + input_1)
+  ),
+  readout_expr = list(quote(x)),
+  params = c("k", "c")
+)
+osc@ninputs    # 1
+osc@nstates    # 2
+osc@noutputs   # 1
+}

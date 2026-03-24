@@ -6,6 +6,13 @@
 #' @param output Name of the output species
 #' @param tname Optional transition name
 #' @returns An Open Petri net
+#' @examples
+#' # Recovery: I -> R
+#' rec <- spontaneous_petri("I", "R", "rec")
+#' species_names(apex(rec)) # c("I", "R")
+#'
+#' # Waning immunity: R -> S
+#' wan <- spontaneous_petri("R", "S", "wan")
 #' @export
 spontaneous_petri <- function(input, output, tname = NULL) {
   if (is.null(tname)) tname <- paste0(input, "_to_", output)
@@ -21,6 +28,14 @@ spontaneous_petri <- function(input, output, tname = NULL) {
 #' @param output Name of the output species
 #' @param tname Optional transition name
 #' @returns An Open Petri net
+#' @examples
+#' # Standard infection: S + I -> I + I
+#' inf <- exposure_petri("S", "I", "I", "inf")
+#' species_names(apex(inf)) # c("S", "I")
+#'
+#' # Exposure (SEIR): S + I -> E + I
+#' exp_petri <- exposure_petri("S", "I", "E", "exp")
+#' species_names(apex(exp_petri)) # c("S", "I", "E")
 #' @export
 exposure_petri <- function(susceptible, infectious, output, tname = NULL) {
   if (is.null(tname)) tname <- paste0(susceptible, "_", infectious, "_to_", output)
@@ -41,6 +56,12 @@ exposure_petri <- function(susceptible, infectious, output, tname = NULL) {
 #' Pre-built epidemiology dictionary for SIR-family models
 #'
 #' Returns a function that maps box names to Open Petri nets.
+#' @examples
+#' d <- epi_dict()
+#' names(d) # available building blocks
+#' # Each entry is an Open Petri net
+#' species_names(apex(d$infection)) # c("S", "I")
+#' species_names(apex(d$recovery))  # c("I", "R")
 #' @export
 epi_dict <- function() {
   list(
@@ -61,6 +82,16 @@ epi_dict <- function() {
 #' @param dict A named list of Open Petri nets, keyed by box names
 #' @param box_names Character vector mapping box indices to dict keys
 #' @returns An Open Petri net
+#' @examples
+#' # Build SIR from epi building blocks
+#' d <- epi_dict()
+#' w <- catlab::uwd(
+#'   outer = c("S", "I", "R"),
+#'   infection = c("S", "I"),
+#'   recovery = c("I", "R")
+#' )
+#' sir <- compose_epi(w, d, c("infection", "recovery"))
+#' species_names(apex(sir)) # c("S", "I", "R")
 #' @export
 compose_epi <- function(w, dict, box_names) {
   components <- lapply(box_names, function(nm) {

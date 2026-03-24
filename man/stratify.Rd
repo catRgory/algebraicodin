@@ -18,3 +18,31 @@ A \code{TypedPetriNet} (the stratified model)
 Computes the typed product of two TypedPetriNets.
 Equivalent to \code{typed_product(base, strata)}.
 }
+\examples{
+# Same as typed_product(); see that function for a full example
+onto <- infectious_ontology()
+sir <- labelled_petri_net(
+  c("S", "I", "R"),
+  inf = c("S", "I") \%=>\% c("I", "I"),
+  rec = "I" \%=>\% "R"
+)
+tp_sir <- typed_petri(sir, onto,
+  species_types = c(S = "Pop", I = "Pop", R = "Pop"),
+  transition_types = c(inf = "infect", rec = "disease")
+)
+tp_sir <- add_reflexives(tp_sir, list(
+  S = "strata", I = "strata", R = "strata"
+))
+
+ages <- labelled_petri_net(c("young", "old"), aging = "young" \%=>\% "old")
+tp_ages <- typed_petri(ages, onto,
+  species_types = c(young = "Pop", old = "Pop"),
+  transition_types = c(aging = "strata")
+)
+tp_ages <- add_reflexives(tp_ages, list(
+  young = c("infect", "disease"), old = c("infect", "disease")
+))
+
+result <- stratify(tp_sir, tp_ages)
+species_names(result)
+}

@@ -16,3 +16,13 @@ An Open Petri net
 Extracts the apex and recovers each leg as an integer vector of species
 indices from the ACSetTransformation components.
 }
+\examples{
+sir <- labelled_petri_net(
+  c("S", "I", "R"),
+  inf = c("S", "I") \%=>\% c("I", "I"),
+  rec = "I" \%=>\% "R"
+)
+sc <- open_petri_net(sir, 1:3)
+open_sir <- as_open(sc)
+species_names(apex(open_sir))
+}

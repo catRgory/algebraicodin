@@ -20,6 +20,19 @@
 #' @param compare Optional named list mapping observed variables to
 #'   distribution families (e.g., `list(cases = "Poisson")`)
 #' @returns A character string of odin2 DSL code
+#' @examples
+#' sir <- labelled_petri_net(
+#'   c("S", "I", "R"),
+#'   inf = c("S", "I") %=>% c("I", "I"),
+#'   rec = "I" %=>% "R"
+#' )
+#' # Generate ODE code
+#' code <- pn_to_odin(sir, type = "ode")
+#' cat(code)
+#'
+#' # Generate stochastic discrete-time code
+#' code_stoch <- pn_to_odin(sir, type = "stochastic")
+#' cat(code_stoch)
 #' @export
 pn_to_odin <- function(pn, type = c("ode", "dde", "stochastic", "discrete"),
                     rate_style = "mass_action", delays = NULL,
@@ -365,6 +378,16 @@ mass_action_hazard <- function(snames, input_col, rate_name) {
 #'
 #' @inheritParams pn_to_odin
 #' @returns A function that creates an odin system, or a code string
+#' @examples
+#' \dontrun{
+#' sir <- labelled_petri_net(
+#'   c("S", "I", "R"),
+#'   inf = c("S", "I") %=>% c("I", "I"),
+#'   rec = "I" %=>% "R"
+#' )
+#' gen <- pn_to_odin_system(sir, type = "ode")
+#' sys <- gen() # creates an odin2 system (requires odin2)
+#' }
 #' @export
 pn_to_odin_system <- function(pn, type = c("ode", "dde", "stochastic", "discrete"),
                            rate_style = "mass_action", delays = NULL,

@@ -1,5 +1,9 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^\.DS_Store$
+^\.github$
 ^vignettes/output$
 ^README\.md$
+^LICENSE\.md$
+^NEWS\.md$
+^_pkgdown\.yml$

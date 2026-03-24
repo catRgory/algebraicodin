@@ -1,0 +1,191 @@
+url: https://catrgory.github.io/algebraicodin/
+
+template:
+  bootstrap: 5
+
+navbar:
+  structure:
+    left: [intro, reference, articles]
+    right: [search, github]
+  components:
+    github:
+      icon: fa-github
+      href: https://github.com/catRgory/algebraicodin
+
+reference:
+  - title: "Petri Nets"
+    desc: "Petri net constructors and accessors"
+    contents:
+      - PetriNet
+      - LabelledPetriNet
+      - ReactionNet
+      - TypedPetriNet
+      - SchPetriNet
+      - SchLabelledPetriNet
+      - SchReactionNet
+      - labelled_petri_net
+      - open_petri_net
+      - species_names
+      - transition_names
+      - typed_petri
+
+  - title: "Stock-Flow Diagrams"
+    desc: "Stock-and-flow model constructors and accessors"
+    contents:
+      - StockFlow0
+      - StockFlowModel
+      - StockFlowType
+      - TypedStockFlow
+      - SchStockFlow
+      - SchStockFlow0
+      - stock_and_flow
+      - flow
+      - open_stock_flow
+      - add_reflexives
+      - sf_add_reflexives
+      - sf_fnames
+      - sf_pnames
+      - sf_snames
+      - sf_svnames
+      - sf_vnames
+
+  - title: "Open Systems & Composition"
+    desc: "Compose models via open systems and wiring diagrams"
+    contents:
+      - Open
+      - as_open
+      - as_structured_cospan
+      - compose
+      - compose_epi
+      - compose_open
+      - oapply
+      - oapply_dynam
+      - sf_oapply
+      - nports
+      - apex
+      - exposed_states
+      - dwd
+      - epi_dict
+      - "%=>%"
+      - "%o%"
+      - "%x%"
+
+  - title: "Stratification"
+    desc: "Typed products for model stratification"
+    contents:
+      - typed_product
+      - sf_typed
+      - sf_typed_product
+      - sf_stratify
+      - stratify
+      - infectious_ontology
+      - sf_infectious_type
+      - create_filter
+      - flatten
+
+  - title: "Code Generation"
+    desc: "Generate odin2 code from models"
+    contents:
+      - pn_to_odin
+      - pn_to_odin_system
+      - sf_to_odin
+      - sf_to_odin_array
+      - sf_to_odin_array_system
+      - sf_to_odin_system
+      - rs_to_odin
+      - machine_to_odin
+      - to_odin
+      - to_odin_system
+
+  - title: "Dynamics"
+    desc: "Vector fields, transition matrices, and model conversions"
+    contents:
+      - vectorfield
+      - sf_vectorfield
+      - transition_matrices
+      - sf_transition_matrices
+      - petri_to_continuous
+      - petri_to_delay
+      - petri_to_discrete
+      - petri_to_sf
+      - sf_to_petri
+      - sf_to_resource_sharer
+      - sf_spatial
+      - euler_approx
+      - eval_dynamics
+      - eval_readout
+
+  - title: "Machines & Resource Sharers"
+    desc: "Continuous and discrete dynamical systems"
+    contents:
+      - Machine
+      - ResourceSharer
+      - continuous_machine
+      - continuous_resource_sharer
+      - delay_machine
+      - delay_resource_sharer
+      - discrete_resource_sharer
+      - simulate_machine
+      - simulate_rs
+      - simulate_rs_discrete
+      - simulate_sf
+      - observe
+
+  - title: "Epidemic Building Blocks"
+    desc: "Pre-built Petri net components for epidemiological models"
+    contents:
+      - spontaneous_petri
+      - exposure_petri
+
+  - title: "Model Fitting"
+    desc: "Bayesian inference with MCMC"
+    contents:
+      - fit_mcmc
+      - build_prior
+      - prior_exp
+      - prior_lognormal
+      - prior_normal
+      - prior_uniform
+
+  - title: "Visualization"
+    desc: "Plotting models and results"
+    contents:
+      - plot_petri
+      - plot_stock_flow
+      - plot_uwd
+      - plot_comparison
+      - plot_diff
+      - plot_fit
+      - plot_posterior
+      - plot_traces
+      - plot_trajectory
+
+articles:
+  - title: "Getting Started"
+    contents:
+      - algebraicodin
+  - title: "Core Modeling"
+    contents:
+      - composition
+      - stockflow
+      - dynamics
+  - title: "Model Types & Code Generation"
+    contents:
+      - model-types
+      - array-codegen
+  - title: "Stratification"
+    contents:
+      - stratification
+      - sf-stratification
+      - spatial
+      - contact-matrix
+  - title: "Model Fitting"
+    contents:
+      - fitting
+  - title: "Examples"
+    contents:
+      - examples
+      - more-examples
+  - title: "Advanced"
+    contents:
+      - advanced

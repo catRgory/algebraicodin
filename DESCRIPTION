@@ -1,6 +1,6 @@
 Package: algebraicodin
-Title: Compositional Epidemiological Modeling with odin2
-Version: 0.0.1
+Title: Compositional Epidemiological Modeling with 'odin2'
+Version: 0.1.0
 Authors@R:
     person("Simon", "Frost", email = "sdwfrost@gmail.com",
            role = c("aut", "cre"), comment = c(ORCID = "0000-0002-5207-9879"))
@@ -12,7 +12,7 @@ Description: Compositional model building using applied category theory,
     Port of AlgebraicPetri.jl and StockFlow.jl from the AlgebraicJulia
     ecosystem.
 License: MIT + file LICENSE
-URL: https://github.com/catRgory/algebraicodin
+URL: https://github.com/catRgory/algebraicodin, https://catrgory.github.io/algebraicodin/
 BugReports: https://github.com/catRgory/algebraicodin/issues
 Imports:
     acsets,
@@ -21,13 +21,15 @@ Imports:
     rlang (>= 1.1.0),
     S7 (>= 0.2.0)
 Suggests:
+    covr,
+    deSolve,
     DiagrammeR,
+    dust2,
     ggplot2,
+    jsonlite,
     knitr,
     monty,
     odin2,
-    dust2,
-    deSolve,
     rmarkdown,
     testthat (>= 3.0.0),
     tidyr
@@ -47,5 +49,6 @@ Collate:
     'operators.R'
     'plot.R'
 Encoding: UTF-8
+Language: en-US
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2

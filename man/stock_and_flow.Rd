@@ -24,3 +24,17 @@ A StockFlowModel
 \description{
 Build a stock-and-flow model using a declarative interface
 }
+\examples{
+# SIR stock-flow model
+sir_sf <- stock_and_flow(
+  stocks = c("S", "I", "R"),
+  flows = list(
+    inf = flow(from = "S", to = "I", rate = quote(beta * S * I / N)),
+    rec = flow(from = "I", to = "R", rate = quote(gamma * I))
+  ),
+  params = c("beta", "gamma"),
+  sums = list(N = c("S", "I", "R"))
+)
+sf_snames(sir_sf) # c("S", "I", "R")
+sf_fnames(sir_sf) # c("inf", "rec")
+}

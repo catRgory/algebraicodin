@@ -16,3 +16,15 @@ A catlab::StructuredCospan with interface_ob = "S"
 Each integer-vector leg becomes an ACSetTransformation from a discrete
 Petri net foot (with parts only in "S") to the apex.
 }
+\examples{
+sir <- labelled_petri_net(
+  c("S", "I", "R"),
+  inf = c("S", "I") \%=>\% c("I", "I"),
+  rec = "I" \%=>\% "R"
+)
+open_sir <- Open(sir)
+sc <- as_structured_cospan(open_sir)
+# Round-trip back to Open
+open_again <- as_open(sc)
+species_names(apex(open_again))
+}

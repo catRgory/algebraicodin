@@ -9,3 +9,10 @@ epi_dict()
 \description{
 Returns a function that maps box names to Open Petri nets.
 }
+\examples{
+d <- epi_dict()
+names(d) # available building blocks
+# Each entry is an Open Petri net
+species_names(apex(d$infection)) # c("S", "I")
+species_names(apex(d$recovery))  # c("I", "R")
+}

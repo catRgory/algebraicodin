@@ -5,6 +5,18 @@
 #' from outside for composition).
 #' @param pn A Petri net ACSet
 #' @param legs List of integer vectors mapping outer junctions to species IDs
+#' @examples
+#' sir <- labelled_petri_net(
+#'   c("S", "I", "R"),
+#'   inf = c("S", "I") %=>% c("I", "I"),
+#'   rec = "I" %=>% "R"
+#' )
+#' # Expose all species as a single leg
+#' open_sir <- Open(sir)
+#' species_names(apex(open_sir)) # c("S", "I", "R")
+#'
+#' # Expose specific species
+#' open_si <- Open(sir, legs = list(c(1L, 2L)))
 #' @export
 Open <- S7::new_class("Open",
   properties = list(
@@ -31,6 +43,19 @@ Open <- S7::new_class("Open",
 #' @param w A UWD ACSet
 #' @param components List of Open Petri nets, one per box
 #' @returns An Open Petri net (the composed system)
+#' @examples
+#' # Build SIR by composing infection and recovery
+#' infection <- exposure_petri("S", "I", "I", "inf")
+#' recovery <- spontaneous_petri("I", "R", "rec")
+#'
+#' # Create a UWD with shared junction "I"
+#' w <- catlab::uwd(
+#'   outer = c("S", "I", "R"),
+#'   infection = c("S", "I"),
+#'   recovery = c("I", "R")
+#' )
+#' sir <- oapply(w, list(infection, recovery))
+#' species_names(apex(sir)) # c("S", "I", "R")
 #' @export
 oapply <- function(w, components) {
   n_boxes <- acsets::nparts(w, "Box")
@@ -126,6 +151,11 @@ oapply <- function(w, components) {
 #' Extract the closed Petri net from an Open Petri net
 #' @param open_pn An Open Petri net
 #' @returns A Petri net ACSet
+#' @examples
+#' pn <- labelled_petri_net(c("S", "I"), inf = "S" %=>% "I")
+#' open_pn <- Open(pn)
+#' closed <- apex(open_pn)
+#' species_names(closed) # c("S", "I")
 #' @export
 apex <- function(open_pn) open_pn@apex
 
@@ -138,6 +168,17 @@ apex <- function(open_pn) open_pn@apex
 #'
 #' @param open_pn An Open Petri net
 #' @returns A catlab::StructuredCospan with interface_ob = "S"
+#' @examples
+#' sir <- labelled_petri_net(
+#'   c("S", "I", "R"),
+#'   inf = c("S", "I") %=>% c("I", "I"),
+#'   rec = "I" %=>% "R"
+#' )
+#' open_sir <- Open(sir)
+#' sc <- as_structured_cospan(open_sir)
+#' # Round-trip back to Open
+#' open_again <- as_open(sc)
+#' species_names(apex(open_again))
 #' @export
 as_structured_cospan <- function(open_pn) {
   do.call(catlab::open_acset, c(list(open_pn@apex, "S"), open_pn@legs))
@@ -150,6 +191,15 @@ as_structured_cospan <- function(open_pn) {
 #'
 #' @param sc A catlab::StructuredCospan
 #' @returns An Open Petri net
+#' @examples
+#' sir <- labelled_petri_net(
+#'   c("S", "I", "R"),
+#'   inf = c("S", "I") %=>% c("I", "I"),
+#'   rec = "I" %=>% "R"
+#' )
+#' sc <- open_petri_net(sir, 1:3)
+#' open_sir <- as_open(sc)
+#' species_names(apex(open_sir))
 #' @export
 as_open <- function(sc) {
   legs <- lapply(sc@legs, function(leg) {
@@ -165,6 +215,13 @@ as_open <- function(sc) {
 #' @param pn A Petri net ACSet
 #' @param ... Integer vectors, each specifying a leg (species indices)
 #' @returns A catlab::StructuredCospan with interface_ob = "S"
+#' @examples
+#' sir <- labelled_petri_net(
+#'   c("S", "I", "R"),
+#'   inf = c("S", "I") %=>% c("I", "I"),
+#'   rec = "I" %=>% "R"
+#' )
+#' sc <- open_petri_net(sir, c(1L, 2L), c(2L, 3L))
 #' @export
 open_petri_net <- function(pn, ...) {
   catlab::open_acset(pn, "S", ...)

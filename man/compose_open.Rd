@@ -16,3 +16,9 @@ An Open Petri net
 Creates a UWD where species with the same name are identified (shared
 junctions), then composes via \code{oapply}.
 }
+\examples{
+inf <- exposure_petri("S", "I", "I", "inf")
+rec <- spontaneous_petri("I", "R", "rec")
+sir <- compose_open(inf, rec)
+species_names(apex(sir)) # c("S", "I", "R")
+}

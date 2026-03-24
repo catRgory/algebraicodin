@@ -48,3 +48,14 @@ A function that creates an odin system, or a code string
 If odin2 is available, this returns a function that when called creates
 an odin system. Otherwise returns the code string.
 }
+\examples{
+\dontrun{
+sir <- labelled_petri_net(
+  c("S", "I", "R"),
+  inf = c("S", "I") \%=>\% c("I", "I"),
+  rec = "I" \%=>\% "R"
+)
+gen <- pn_to_odin_system(sir, type = "ode")
+sys <- gen() # creates an odin2 system (requires odin2)
+}
+}
