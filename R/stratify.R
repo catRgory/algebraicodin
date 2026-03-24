@@ -379,6 +379,8 @@ typed_product <- function(tp1, tp2) {
 }
 
 #' Extract the underlying Petri net from a TypedPetriNet
+#' @param typed_pn A TypedPetriNet
+#' @returns A Petri net ACSet
 #' @export
 flatten <- function(typed_pn) typed_pn@pn
 

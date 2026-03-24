@@ -23,7 +23,10 @@
 #' @param system_type One of "continuous", "discrete", "delay"
 #' @param nstates Number of internal state variables
 #' @param dynamics Function implementing the system evolution
-#' @param portmap Integer vector mapping ports → state indices
+#' @param portmap Integer vector mapping ports to state indices
+#' @param state_names Character vector of state variable names
+#' @param dynamics_expr List of symbolic expressions for code generation
+#' @param params Character vector of parameter names
 #' @export
 ResourceSharer <- S7::new_class("ResourceSharer",
   properties = list(
@@ -63,10 +66,14 @@ ResourceSharer <- S7::new_class("ResourceSharer",
 )
 
 #' Number of ports
+#' @param rs A ResourceSharer or Machine
+#' @returns Integer number of ports
 #' @export
 nports <- function(rs) length(rs@portmap)
 
 #' Evaluate dynamics of a ResourceSharer
+#' @param rs A ResourceSharer
+#' @param ... Additional arguments passed to methods
 #' @export
 eval_dynamics <- S7::new_generic("eval_dynamics", "rs")
 
@@ -79,6 +86,9 @@ S7::method(eval_dynamics, ResourceSharer) <- function(rs, u, p = NULL, t = 0, h 
 }
 
 #' Get exposed state values at ports
+#' @param rs A ResourceSharer
+#' @param u State vector
+#' @returns Numeric vector of exposed state values
 #' @export
 exposed_states <- function(rs, u) u[rs@portmap]
 
@@ -93,8 +103,12 @@ exposed_states <- function(rs, u) u[rs@portmap]
 #' @param ninputs Number of input ports
 #' @param nstates Number of internal state variables
 #' @param noutputs Number of output ports
-#' @param dynamics Function: (u, x, p, t) -> du  [or (u, x, h, p, t) for delay]
-#' @param readout Function: (u, p, t) -> y  [or (u, h, p, t) for delay]
+#' @param dynamics Function: `(u, x, p, t) -> du` or `(u, x, h, p, t) -> du` for delay
+#' @param readout Function: `(u, p, t) -> y` or `(u, h, p, t) -> y` for delay
+#' @param state_names Character vector of state variable names
+#' @param dynamics_expr List of symbolic expressions for code generation
+#' @param readout_expr List of symbolic readout expressions
+#' @param params Character vector of parameter names
 #' @export
 Machine <- S7::new_class("Machine",
   properties = list(
@@ -142,6 +156,12 @@ S7::method(eval_dynamics, Machine) <- function(rs, u, x = numeric(0),
 }
 
 #' Evaluate readout of a Machine
+#' @param m A Machine
+#' @param u State vector
+#' @param p Parameter list
+#' @param t Time
+#' @param h History function (for delay systems)
+#' @returns Readout vector
 #' @export
 eval_readout <- function(m, u, p = NULL, t = 0, h = NULL) {
   if (m@system_type == "delay" && !is.null(h)) {
@@ -211,6 +231,8 @@ euler_approx <- function(rs, h = NULL) {
 # --- Petri net → dynamical system converters ------------------------------
 
 #' Convert a Petri net to a ContinuousResourceSharer (ODE)
+#' @param pn A Petri net ACSet
+#' @returns A ResourceSharer with system_type "continuous"
 #' @export
 petri_to_continuous <- function(pn) {
   tm <- transition_matrices(pn)
@@ -241,6 +263,8 @@ petri_to_continuous <- function(pn) {
 }
 
 #' Convert a Petri net to a DiscreteResourceSharer (stochastic)
+#' @param pn A Petri net ACSet
+#' @returns A ResourceSharer with system_type "discrete"
 #' @export
 petri_to_discrete <- function(pn) {
   tm <- transition_matrices(pn)

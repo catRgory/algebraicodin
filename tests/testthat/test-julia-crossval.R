@@ -2,36 +2,10 @@ library(testthat)
 library(S7)
 library(jsonlite)
 
-# Source acsets
-acsets_dir <- normalizePath(file.path(getwd(), "..", "..", "..", "acsets", "R"))
-for (f in c("schema.R", "parts.R", "columns.R",
-            "acset.R", "deletion.R", "factory.R", "json.R", "query.R", "tables.R")) {
-  source(file.path(acsets_dir, f))
-}
-
-# Source catlab (strip acsets:: prefix)
-catlab_dir <- normalizePath(file.path(getwd(), "..", "..", "..", "catlab", "R"))
-source_sans_ns <- function(path, ns_prefix) {
-  code <- readLines(path)
-  code <- gsub(paste0(ns_prefix, "::"), "", code)
-  eval(parse(text = code), envir = globalenv())
-}
-for (f in c("graphs.R", "fincat.R", "limits.R", "uwd.R", "migration.R", "graphviz.R")) {
-  source_sans_ns(file.path(catlab_dir, f), "acsets")
-}
-
-# Source algebraicodin (strip acsets:: and catlab:: prefixes)
-aodin_dir <- normalizePath(file.path(getwd(), "..", "..", "R"))
-source_sans_ns2 <- function(path) {
-  code <- readLines(path)
-  code <- gsub("acsets::", "", code)
-  code <- gsub("catlab::", "", code)
-  eval(parse(text = code), envir = globalenv())
-}
-for (f in c("petri.R", "open.R", "matrices.R", "to_odin.R", "epi.R",
-            "dynam.R", "stratify.R", "operators.R")) {
-  source_sans_ns2(file.path(aodin_dir, f))
-}
+# Use installed packages (loaded via testthat.R / R CMD check)
+library(acsets)
+library(catlab)
+library(algebraicodin)
 
 # Load Julia reference results
 julia <- fromJSON(file.path(getwd(), "julia_results.json"))

@@ -3,6 +3,8 @@
 
 #' Open Petri net: a Petri net with exposed "legs" (species accessible
 #' from outside for composition).
+#' @param pn A Petri net ACSet
+#' @param legs List of integer vectors mapping outer junctions to species IDs
 #' @export
 Open <- S7::new_class("Open",
   properties = list(
@@ -122,6 +124,8 @@ oapply <- function(w, components) {
 }
 
 #' Extract the closed Petri net from an Open Petri net
+#' @param open_pn An Open Petri net
+#' @returns A Petri net ACSet
 #' @export
 apex <- function(open_pn) open_pn@apex
 

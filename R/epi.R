@@ -1,7 +1,11 @@
 # Epidemiology building blocks ---------------------------------------------
 # Pre-built open Petri nets for common epi transitions.
 
-#' Spontaneous transition: A → B
+#' Spontaneous transition: A -> B
+#' @param input Name of the input species
+#' @param output Name of the output species
+#' @param tname Optional transition name
+#' @returns An Open Petri net
 #' @export
 spontaneous_petri <- function(input, output, tname = NULL) {
   if (is.null(tname)) tname <- paste0(input, "_to_", output)
@@ -11,7 +15,12 @@ spontaneous_petri <- function(input, output, tname = NULL) {
   Open(pn, legs = list(seq_len(acsets::nparts(pn, "S"))))
 }
 
-#' Exposure/contact transition: A + B → C + B (B catalyzes A → C)
+#' Exposure/contact transition: A + B -> C + B (B catalyzes A -> C)
+#' @param susceptible Name of the susceptible species
+#' @param infectious Name of the infectious species
+#' @param output Name of the output species
+#' @param tname Optional transition name
+#' @returns An Open Petri net
 #' @export
 exposure_petri <- function(susceptible, infectious, output, tname = NULL) {
   if (is.null(tname)) tname <- paste0(susceptible, "_", infectious, "_to_", output)

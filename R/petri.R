@@ -44,18 +44,31 @@ SchReactionNet <- acsets::BasicSchema(
 )
 
 # ACSet type constructors
+
+#' PetriNet ACSet type (unlabelled)
+#' @param ... Arguments passed to the ACSet constructor
 #' @export
 PetriNet <- acsets::acset_type(SchPetriNet, name = "PetriNet",
                                 index = c("is", "it", "os", "ot"))
+
+#' LabelledPetriNet ACSet type
+#' @param ... Arguments passed to the ACSet constructor
 #' @export
 LabelledPetriNet <- acsets::acset_type(SchLabelledPetriNet,
                                         name = "LabelledPetriNet",
                                         index = c("is", "it", "os", "ot"))
+
+#' ReactionNet ACSet type (labelled with rates and concentrations)
+#' @param ... Arguments passed to the ACSet constructor
 #' @export
 ReactionNet <- acsets::acset_type(SchReactionNet, name = "ReactionNet",
                                    index = c("is", "it", "os", "ot"))
 
-# Convenience operator for defining transitions: inputs %=>% outputs
+#' Define a Petri net transition: inputs to outputs
+#'
+#' @param inputs Character vector of input species names
+#' @param outputs Character vector of output species names
+#' @returns A list with `inputs` and `outputs`
 #' @export
 `%=>%` <- function(inputs, outputs) {
   list(inputs = inputs, outputs = outputs)
@@ -96,6 +109,8 @@ labelled_petri_net <- function(species, ...) {
 }
 
 #' Get species names from a Petri net
+#' @param pn A Petri net ACSet (or TypedPetriNet)
+#' @returns Character vector of species names
 #' @export
 species_names <- function(pn) {
   if (S7::S7_inherits(pn, TypedPetriNet)) pn <- pn@pn
@@ -108,6 +123,8 @@ species_names <- function(pn) {
 }
 
 #' Get transition names from a Petri net
+#' @param pn A Petri net ACSet (or TypedPetriNet)
+#' @returns Character vector of transition names
 #' @export
 transition_names <- function(pn) {
   if (S7::S7_inherits(pn, TypedPetriNet)) pn <- pn@pn

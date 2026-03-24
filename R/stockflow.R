@@ -71,11 +71,13 @@ SchStockFlow <- acsets::BasicSchema(
 )
 
 #' Create StockFlow0 ACSet type (for composition feet)
+#' @param ... Arguments passed to the ACSet constructor
 #' @export
 StockFlow0 <- acsets::acset_type(SchStockFlow0, name = "StockFlow0",
                                   index = c("lss", "lssv"))
 
 #' Create StockFlow ACSet type
+#' @param ... Arguments passed to the ACSet constructor
 #' @export
 StockFlowType <- acsets::acset_type(SchStockFlow, name = "StockFlow",
                                      index = c("is", "os", "ifn", "ofn", "fv",
@@ -112,6 +114,8 @@ StockFlowModel <- S7::new_class("StockFlowModel",
 # --- Accessor functions ------------------------------------------------------
 
 #' Get stock names
+#' @param sf A StockFlowModel or StockFlow ACSet
+#' @returns Character vector of stock names
 #' @export
 sf_snames <- function(sf) {
   ac <- if (S7::S7_inherits(sf, StockFlowModel)) sf@acset else sf
@@ -121,6 +125,8 @@ sf_snames <- function(sf) {
 }
 
 #' Get flow names
+#' @param sf A StockFlowModel or StockFlow ACSet
+#' @returns Character vector of flow names
 #' @export
 sf_fnames <- function(sf) {
   ac <- if (S7::S7_inherits(sf, StockFlowModel)) sf@acset else sf
@@ -130,6 +136,8 @@ sf_fnames <- function(sf) {
 }
 
 #' Get variable names
+#' @param sf A StockFlowModel or StockFlow ACSet
+#' @returns Character vector of variable names
 #' @export
 sf_vnames <- function(sf) {
   ac <- if (S7::S7_inherits(sf, StockFlowModel)) sf@acset else sf
@@ -139,6 +147,8 @@ sf_vnames <- function(sf) {
 }
 
 #' Get sum variable names
+#' @param sf A StockFlowModel or StockFlow ACSet
+#' @returns Character vector of sum variable names
 #' @export
 sf_svnames <- function(sf) {
   ac <- if (S7::S7_inherits(sf, StockFlowModel)) sf@acset else sf
@@ -148,6 +158,8 @@ sf_svnames <- function(sf) {
 }
 
 #' Get parameter names
+#' @param sf A StockFlowModel or StockFlow ACSet
+#' @returns Character vector of parameter names
 #' @export
 sf_pnames <- function(sf) {
   ac <- if (S7::S7_inherits(sf, StockFlowModel)) sf@acset else sf
@@ -658,7 +670,7 @@ sf_to_odin_array <- function(sf, type = "ode", initial = NULL,
     lines <- c(lines, "## Sum variables")
     for (sv in base_sum_names) {
       # Sum over stocks for each stratum: N[i] = S[i] + I[i] + R[i]
-      svs <- algebraicodin:::sf_sum_variable_stocks(sf)
+      svs <- sf_sum_variable_stocks(sf)
       # Find which base stocks are in this sum var (from first stratum)
       first_sv <- paste0(sv, "_", strata[1])
       if (first_sv %in% names(svs)) {
@@ -1429,6 +1441,7 @@ plot_stock_flow <- function(sf) {
 #' @param stock_map Named character: base stock name -> type stock name
 #' @param flow_map Named character: base flow name -> type flow name
 #' @param param_map Named character: base param name -> type param name
+#' @param refl_flows Character vector of reflexive flow names
 #' @returns A TypedStockFlow object
 #' @export
 TypedStockFlow <- S7::new_class("TypedStockFlow",
