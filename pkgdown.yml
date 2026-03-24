@@ -1,0 +1,22 @@
+pandoc: 3.1.11
+pkgdown: 2.2.0
+pkgdown_sha: ~
+articles:
+  advanced: advanced.html
+  algebraicodin: algebraicodin.html
+  array-codegen: array-codegen.html
+  composition: composition.html
+  contact-matrix: contact-matrix.html
+  dynamics: dynamics.html
+  examples: examples.html
+  fitting: fitting.html
+  model-types: model-types.html
+  more-examples: more-examples.html
+  sf-stratification: sf-stratification.html
+  spatial: spatial.html
+  stockflow: stockflow.html
+  stratification: stratification.html
+last_built: 2026-03-24T22:18Z
+urls:
+  reference: https://catrgory.github.io/algebraicodin/reference
+  article: https://catrgory.github.io/algebraicodin/articles
