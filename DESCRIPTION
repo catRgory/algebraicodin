@@ -52,3 +52,9 @@ Encoding: UTF-8
 Language: en-US
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
+Remotes:
+    catRgory/acsets,
+    catRgory/catlab,
+    mrc-ide/odin2,
+    mrc-ide/dust2,
+    mrc-ide/monty

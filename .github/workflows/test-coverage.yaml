@@ -26,15 +26,6 @@ jobs:
           extra-packages: any::covr, any::xml2
           needs: coverage
 
-      - name: Install GitHub dependencies
-        run: |
-          remotes::install_github("catRgory/acsets")
-          remotes::install_github("catRgory/catlab")
-          remotes::install_github("mrc-ide/odin2")
-          remotes::install_github("mrc-ide/dust2")
-          remotes::install_github("mrc-ide/monty")
-        shell: Rscript {0}
-
       - name: Test coverage
         run: |
           cov <- covr::package_coverage(

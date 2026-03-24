@@ -27,12 +27,6 @@ jobs:
         with:
           use-public-rspm: true
 
-      - name: Install GitHub dependencies
-        run: |
-          install.packages("pak", repos = sprintf("https://r-lib.github.io/p/pak/stable/%s/%s/%s", .Platform$pkgType, R.Version()$os, R.Version()$arch))
-          pak::pak(c("catRgory/acsets", "catRgory/catlab", "mrc-ide/odin2", "mrc-ide/dust2", "mrc-ide/monty"))
-        shell: Rscript {0}
-
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: any::pkgdown, local::.

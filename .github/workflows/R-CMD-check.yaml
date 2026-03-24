@@ -42,15 +42,6 @@ jobs:
           extra-packages: any::rcmdcheck, any::remotes
           needs: check
 
-      - name: Install GitHub dependencies
-        run: |
-          remotes::install_github("catRgory/acsets")
-          remotes::install_github("catRgory/catlab")
-          remotes::install_github("mrc-ide/odin2")
-          remotes::install_github("mrc-ide/dust2")
-          remotes::install_github("mrc-ide/monty")
-        shell: Rscript {0}
-
       - uses: r-lib/actions/check-r-package@v2
         with:
           args: '"--no-manual", "--as-cran", "--no-vignettes"'
