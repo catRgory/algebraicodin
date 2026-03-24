@@ -9,6 +9,15 @@
 #'
 #' @param pn A Petri net ACSet, TypedPetriNet, or Open Petri net
 #' @returns A DiagrammeR `htmlwidget`
+#' @examples
+#' sir <- labelled_petri_net(
+#'   c("S", "I", "R"),
+#'   inf = c("S", "I") %=>% c("I", "I"),
+#'   rec = "I" %=>% "R"
+#' )
+#' if (requireNamespace("DiagrammeR", quietly = TRUE)) {
+#'   plot_petri(sir)
+#' }
 #' @export
 plot_petri <- function(pn) {
   if (!requireNamespace("DiagrammeR", quietly = TRUE)) {
@@ -29,6 +38,15 @@ plot_petri <- function(pn) {
 #'
 #' @param w A UWD ACSet
 #' @returns A DiagrammeR `htmlwidget`
+#' @examples
+#' w <- uwd(
+#'   outer = c("s", "i", "r"),
+#'   infection = c("s", "i"),
+#'   recovery = c("i", "r")
+#' )
+#' if (requireNamespace("DiagrammeR", quietly = TRUE)) {
+#'   plot_uwd(w)
+#' }
 #' @export
 plot_uwd <- function(w) {
   if (!requireNamespace("DiagrammeR", quietly = TRUE)) {
@@ -46,6 +64,13 @@ plot_uwd <- function(w) {
 #' @param vars Character vector of variable names to plot (default: all non-time)
 #' @param title Optional plot title
 #' @returns A ggplot2 object
+#' @examples
+#' sol <- data.frame(time = seq(0, 10, 0.1),
+#'                   S = 990 * exp(-0.3 * seq(0, 10, 0.1)),
+#'                   I = 10 * exp(0.1 * seq(0, 10, 0.1)))
+#' if (requireNamespace("ggplot2", quietly = TRUE)) {
+#'   plot_trajectory(sol, title = "SIR Trajectory")
+#' }
 #' @export
 plot_trajectory <- function(sol, vars = NULL, title = NULL) {
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
@@ -98,6 +123,13 @@ plot_trajectory <- function(sol, vars = NULL, title = NULL) {
 #' @param labels Two-element character vector labeling each solution
 #' @param title Optional plot title
 #' @returns A ggplot2 object
+#' @examples
+#' t <- seq(0, 10, 0.1)
+#' sol1 <- data.frame(time = t, S = 990 * exp(-0.3 * t), I = 10 * exp(0.1 * t))
+#' sol2 <- data.frame(time = t, S = 980 * exp(-0.3 * t), I = 20 * exp(0.1 * t))
+#' if (requireNamespace("ggplot2", quietly = TRUE)) {
+#'   plot_comparison(sol1, sol2, labels = c("Run 1", "Run 2"))
+#' }
 #' @export
 plot_comparison <- function(sol1, sol2, vars = NULL,
                             labels = c("Model 1", "Model 2"),
@@ -156,6 +188,13 @@ plot_comparison <- function(sol1, sol2, vars = NULL,
 #' @param vars Character vector of variable names
 #' @param title Optional plot title
 #' @returns A ggplot2 object
+#' @examples
+#' t <- seq(0, 10, 0.1)
+#' sol1 <- data.frame(time = t, S = 990 * exp(-0.3 * t), I = 10 * exp(0.1 * t))
+#' sol2 <- data.frame(time = t, S = 989 * exp(-0.3 * t), I = 11 * exp(0.1 * t))
+#' if (requireNamespace("ggplot2", quietly = TRUE)) {
+#'   plot_diff(sol1, sol2)
+#' }
 #' @export
 plot_diff <- function(sol1, sol2, vars = NULL, title = "Absolute Difference") {
   if (!requireNamespace("ggplot2", quietly = TRUE)) {

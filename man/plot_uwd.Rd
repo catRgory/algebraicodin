@@ -16,3 +16,13 @@ A DiagrammeR \code{htmlwidget}
 Boxes are yellow rectangles, junctions are grey circles,
 outer ports are small black diamonds.
 }
+\examples{
+w <- uwd(
+  outer = c("s", "i", "r"),
+  infection = c("s", "i"),
+  recovery = c("i", "r")
+)
+if (requireNamespace("DiagrammeR", quietly = TRUE)) {
+  plot_uwd(w)
+}
+}

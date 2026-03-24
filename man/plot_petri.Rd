@@ -16,3 +16,13 @@ A DiagrammeR \code{htmlwidget}
 Species are shown as blue circles, transitions as orange boxes.
 Accepts LabelledPetriNet, TypedPetriNet, or Open Petri nets.
 }
+\examples{
+sir <- labelled_petri_net(
+  c("S", "I", "R"),
+  inf = c("S", "I") \%=>\% c("I", "I"),
+  rec = "I" \%=>\% "R"
+)
+if (requireNamespace("DiagrammeR", quietly = TRUE)) {
+  plot_petri(sir)
+}
+}

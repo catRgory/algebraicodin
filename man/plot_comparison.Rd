@@ -29,3 +29,11 @@ A ggplot2 object
 \description{
 Plot a comparison of two ODE solutions (e.g., R vs Julia)
 }
+\examples{
+t <- seq(0, 10, 0.1)
+sol1 <- data.frame(time = t, S = 990 * exp(-0.3 * t), I = 10 * exp(0.1 * t))
+sol2 <- data.frame(time = t, S = 980 * exp(-0.3 * t), I = 20 * exp(0.1 * t))
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  plot_comparison(sol1, sol2, labels = c("Run 1", "Run 2"))
+}
+}

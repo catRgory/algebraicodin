@@ -19,3 +19,11 @@ A ggplot2 object
 \description{
 Plot ODE solution trajectories with ggplot2
 }
+\examples{
+sol <- data.frame(time = seq(0, 10, 0.1),
+                  S = 990 * exp(-0.3 * seq(0, 10, 0.1)),
+                  I = 10 * exp(0.1 * seq(0, 10, 0.1)))
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  plot_trajectory(sol, title = "SIR Trajectory")
+}
+}
