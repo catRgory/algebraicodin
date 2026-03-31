@@ -263,7 +263,7 @@ gen5 <- odin2::odin(code5)
 #> g++ -std=gnu++17 -I"/opt/R/4.5.3/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I'/home/runner/work/_temp/Library/dust2/include' -I'/home/runner/work/_temp/Library/monty/include' -I/usr/local/include   -DHAVE_INLINE -fopenmp  -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always  -c cpp11.cpp -o cpp11.o
 #> g++ -std=gnu++17 -I"/opt/R/4.5.3/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I'/home/runner/work/_temp/Library/dust2/include' -I'/home/runner/work/_temp/Library/monty/include' -I/usr/local/include   -DHAVE_INLINE -fopenmp  -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always  -c dust.cpp -o dust.o
 #> g++ -std=gnu++17 -shared -L/opt/R/4.5.3/lib/R/lib -L/usr/local/lib -o odin.systemc4fca27f.so cpp11.o dust.o -fopenmp -L/opt/R/4.5.3/lib/R/lib -lR
-#> installing to /tmp/RtmpGsRuUT/devtools_install_24b66dcb9dde/00LOCK-dust_24b66476ef3b/00new/odin.systemc4fca27f/libs
+#> installing to /tmp/RtmpdC8O12/devtools_install_24f477e53dce/00LOCK-dust_24f43da773c9/00new/odin.systemc4fca27f/libs
 #> ** checking absolute paths in shared objects and dynamic libraries
 #> * DONE (odin.systemc4fca27f)
 #> ℹ Loading odin.systemc4fca27f
@@ -299,7 +299,7 @@ gen1 <- odin2::odin(pn_to_odin(sir, "ode"))
 #> g++ -std=gnu++17 -I"/opt/R/4.5.3/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I'/home/runner/work/_temp/Library/dust2/include' -I'/home/runner/work/_temp/Library/monty/include' -I/usr/local/include   -DHAVE_INLINE -fopenmp  -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always  -c cpp11.cpp -o cpp11.o
 #> g++ -std=gnu++17 -I"/opt/R/4.5.3/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I'/home/runner/work/_temp/Library/dust2/include' -I'/home/runner/work/_temp/Library/monty/include' -I/usr/local/include   -DHAVE_INLINE -fopenmp  -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always  -c dust.cpp -o dust.o
 #> g++ -std=gnu++17 -shared -L/opt/R/4.5.3/lib/R/lib -L/usr/local/lib -o odin.system840d9d16.so cpp11.o dust.o -fopenmp -L/opt/R/4.5.3/lib/R/lib -lR
-#> installing to /tmp/RtmpGsRuUT/devtools_install_24b64aa8df39/00LOCK-dust_24b64ae57d4b/00new/odin.system840d9d16/libs
+#> installing to /tmp/RtmpdC8O12/devtools_install_24f4c6ee35e/00LOCK-dust_24f45b79eaef/00new/odin.system840d9d16/libs
 #> ** checking absolute paths in shared objects and dynamic libraries
 #> * DONE (odin.system840d9d16)
 #> ℹ Loading odin.system840d9d16
@@ -418,7 +418,7 @@ gen <- odin2::odin(pn_to_odin(apex(sirh), "ode"))
 #> g++ -std=gnu++17 -I"/opt/R/4.5.3/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I'/home/runner/work/_temp/Library/dust2/include' -I'/home/runner/work/_temp/Library/monty/include' -I/usr/local/include   -DHAVE_INLINE -fopenmp  -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always  -c cpp11.cpp -o cpp11.o
 #> g++ -std=gnu++17 -I"/opt/R/4.5.3/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I'/home/runner/work/_temp/Library/dust2/include' -I'/home/runner/work/_temp/Library/monty/include' -I/usr/local/include   -DHAVE_INLINE -fopenmp  -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always  -c dust.cpp -o dust.o
 #> g++ -std=gnu++17 -shared -L/opt/R/4.5.3/lib/R/lib -L/usr/local/lib -o odin.system5a1eb956.so cpp11.o dust.o -fopenmp -L/opt/R/4.5.3/lib/R/lib -lR
-#> installing to /tmp/RtmpGsRuUT/devtools_install_24b61408f8f4/00LOCK-dust_24b64ad165d9/00new/odin.system5a1eb956/libs
+#> installing to /tmp/RtmpdC8O12/devtools_install_24f4a5dae5e/00LOCK-dust_24f46d0bb5d2/00new/odin.system5a1eb956/libs
 #> ** checking absolute paths in shared objects and dynamic libraries
 #> * DONE (odin.system5a1eb956)
 #> ℹ Loading odin.system5a1eb956
@@ -612,7 +612,7 @@ system.time({
   }
 })
 #>    user  system elapsed 
-#>   0.714   0.019   0.733
+#>   0.728   0.021   0.749
 ```
 
 ## Summary
