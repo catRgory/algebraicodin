@@ -174,6 +174,67 @@ test_that("sf_to_odin generates stochastic code", {
   expect_true(grepl("* dt)", code, fixed = TRUE))
 })
 
+test_that("stock_and_flow supports function-valued rates in vectorfields", {
+  beta_rate <- function(u, p, t) p$beta * u["S"]
+  sir <- stock_and_flow(
+    stocks = c("S", "I"),
+    flows = list(
+      inf = flow(from = "S", to = "I", rate = beta_rate)
+    ),
+    params = c("beta")
+  )
+
+  vf <- sf_vectorfield(sir)
+  derivs <- vf(0, c(S = 3, I = 1), list(beta = 2))[[1]]
+
+  expect_equal(unname(derivs), c(-6, 6))
+})
+
+test_that("stock_and_flow supports advanced function-valued rates with sum vars", {
+  total_rate <- function(u, sv, p, t) p$beta * sv$N
+  sir <- stock_and_flow(
+    stocks = c("S", "I"),
+    flows = list(
+      inf = flow(from = "S", to = "I", rate = total_rate)
+    ),
+    params = c("beta"),
+    sums = list(N = c("S", "I"))
+  )
+
+  vf <- sf_vectorfield(sir)
+  derivs <- vf(0, c(S = 3, I = 1), list(beta = 2))[[1]]
+
+  expect_equal(unname(derivs), c(-8, 8))
+})
+
+test_that("sf_to_odin rejects function-valued flow rates", {
+  sir <- stock_and_flow(
+    stocks = c("S", "I"),
+    flows = list(
+      inf = flow(from = "S", to = "I", rate = function(u, p, t) p$beta * u["S"])
+    ),
+    params = c("beta")
+  )
+
+  expect_error(sf_to_odin(sir, type = "ode"), "does not support function-valued flow rates")
+})
+
+test_that("sf_to_odin rejects competing stochastic outflows", {
+  model <- stock_and_flow(
+    stocks = c("S", "I", "V"),
+    flows = list(
+      inf = flow(from = "S", to = "I", rate = quote(beta * S)),
+      vac = flow(from = "S", to = "V", rate = quote(nu * S))
+    ),
+    params = c("beta", "nu")
+  )
+
+  expect_error(
+    sf_to_odin(model, type = "stochastic"),
+    "competing stochastic outflows"
+  )
+})
+
 test_that("sf_to_odin generates discrete code", {
   sir <- stock_and_flow(
     stocks = c("S", "I", "R"),

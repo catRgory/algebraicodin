@@ -92,7 +92,8 @@ StockFlowType <- acsets::acset_type(SchStockFlow, name = "StockFlow",
 #' (expressed as R expressions or functions) and operator information.
 #'
 #' @param acset The underlying StockFlow ACSet
-#' @param flow_fns Named list of flow rate functions: name -> function(u, p, t)
+#' @param flow_fns Named list of internal flow rate functions:
+#'   name -> function(u, sv, p, t)
 #' @param var_exprs Named list of variable expression strings (for display)
 #' @export
 StockFlowModel <- S7::new_class("StockFlowModel",
@@ -272,7 +273,7 @@ stock_and_flow <- function(stocks, flows, params = character(0),
     # Process rate expression to extract dependencies
     rate <- fspec$rate
     if (is.function(rate)) {
-      flow_fns[[fn]] <- rate
+      flow_fns[[fn]] <- normalize_flow_fn(rate, fn)
       var_exprs[[vn]] <- "<function>"
     } else if (is.language(rate) || is.character(rate) ||
                (is.atomic(rate) && length(rate) == 1L && !is.na(rate))) {
@@ -317,7 +318,8 @@ stock_and_flow <- function(stocks, flows, params = character(0),
 #'
 #' @param from Source stock name (NULL or "cloud" for external inflow)
 #' @param to Target stock name (NULL or "cloud" for external outflow)
-#' @param rate Rate expression (quoted) or function(u, p, t)
+#' @param rate Rate expression (quoted), `function(u, p, t)`, or
+#'   `function(u, sv, p, t)` for advanced use with sum variables
 #' @returns A flow spec list
 #' @examples
 #' # Internal flow between stocks
@@ -336,10 +338,43 @@ flow <- function(from = NULL, to = NULL, rate) {
   # If the user passes quote(...), the substitute captures the quote() call;
   # we need to evaluate it to get the inner expression.
   rate_expr <- substitute(rate)
+  rate_value <- resolve_flow_rate(rate_expr, parent.frame())
+  list(from = from, to = to, rate = rate_value)
+}
+
+resolve_flow_rate <- function(rate_expr, env) {
   if (is.call(rate_expr) && identical(rate_expr[[1]], quote(quote))) {
-    rate_expr <- eval(rate_expr)
+    return(eval(rate_expr, envir = env))
   }
-  list(from = from, to = to, rate = rate_expr)
+
+  if (is.call(rate_expr) && identical(rate_expr[[1]], quote(`function`))) {
+    return(eval(rate_expr, envir = env))
+  }
+
+  if (is.symbol(rate_expr) && exists(as.character(rate_expr), envir = env, inherits = TRUE)) {
+    rate_value <- get(as.character(rate_expr), envir = env, inherits = TRUE)
+    if (is.function(rate_value)) {
+      return(rate_value)
+    }
+  }
+
+  rate_expr
+}
+
+normalize_flow_fn <- function(rate_fn, flow_name) {
+  nargs <- length(formals(rate_fn))
+  if (nargs == 3L) {
+    return(function(u, sv, p, t) rate_fn(u, p, t))
+  }
+  if (nargs == 4L) {
+    return(rate_fn)
+  }
+
+  cli::cli_abort(c(
+    "Flow '{flow_name}' has an unsupported function-valued `rate`.",
+    x = "Expected `function(u, p, t)` or `function(u, sv, p, t)`.",
+    i = "Use an expression-based rate for odin code generation."
+  ))
 }
 
 # Build a flow rate function from an R expression
@@ -480,6 +515,34 @@ sf_vectorfield <- function(sf) {
   }
 }
 
+validate_stockflow_codegen_rates <- function(sf, caller) {
+  flow_names <- sf_fnames(sf)
+  function_flows <- flow_names[vapply(flow_names, function(fn) {
+    identical(sf@var_exprs[[paste0("v_", fn)]], "<function>")
+  }, logical(1))]
+
+  if (length(function_flows) > 0L) {
+    cli::cli_abort(c(
+      "{.code {caller}} does not support function-valued flow rates.",
+      x = "Flow(s): {paste(function_flows, collapse = ', ')}.",
+      i = "Use quoted or character rate expressions when generating odin code."
+    ))
+  }
+}
+
+validate_stochastic_stockflow <- function(tm, sn, fn, context) {
+  for (i in seq_along(sn)) {
+    competing <- which(tm$outflow[, i] == 1L)
+    if (length(competing) > 1L) {
+      cli::cli_abort(c(
+        "{.code {context}} does not currently support competing stochastic outflows from the same source stock.",
+        x = "Flows {paste(sprintf(\"'%s'\", fn[competing]), collapse = ', ')} all draw independently from stock '{sn[i]}'.",
+        i = "Use deterministic code generation for this model, or refactor the competing outflows."
+      ))
+    }
+  }
+}
+
 # Helper: get which stocks contribute to each sum variable
 sf_sum_variable_stocks <- function(sf) {
   ac <- if (S7::S7_inherits(sf, StockFlowModel)) sf@acset else sf
@@ -529,6 +592,11 @@ sf_to_odin <- function(sf, type = "ode", initial = NULL, compare = NULL) {
   ns <- length(sn)
   nf <- length(fn)
   tm <- sf_transition_matrices(sf)
+
+  validate_stockflow_codegen_rates(sf, "sf_to_odin()")
+  if (identical(type, "stochastic")) {
+    validate_stochastic_stockflow(tm, sn, fn, context = "sf_to_odin(type = \"stochastic\")")
+  }
   sv_stocks <- sf_sum_variable_stocks(sf)
 
   lines <- character(0)
@@ -685,7 +753,7 @@ sf_to_odin_system <- function(sf, type = "ode", initial = NULL,
 #' @returns Character string of odin2 code using arrays
 #' @export
 sf_to_odin_array <- function(sf, type = "ode", initial = NULL,
-                              compare = NULL) {
+                             compare = NULL) {
   info <- attr(sf, "strata_info")
   if (is.null(info))
     cli::cli_abort(paste(
@@ -703,6 +771,11 @@ sf_to_odin_array <- function(sf, type = "ode", initial = NULL,
   fn <- sf_fnames(sf)
   pn <- sf_pnames(sf)
   tm <- sf_transition_matrices(sf)
+
+  validate_stockflow_codegen_rates(sf, "sf_to_odin_array()")
+  if (identical(type, "stochastic")) {
+    validate_stochastic_stockflow(tm, sn, fn, context = "sf_to_odin_array(type = \"stochastic\")")
+  }
 
   lines <- character()
   lines <- c(lines, "## Auto-generated by algebraicodin (array mode)")

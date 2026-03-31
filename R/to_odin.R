@@ -61,7 +61,7 @@ pn_to_odin <- function(pn, type = c("ode", "dde", "stochastic", "discrete"),
     validate_delay_specs(delays, tnames, snames)
     lines <- c(lines, generate_dde_code(pn, snames, tnames, tm, rate_style, delays))
   } else if (type == "stochastic") {
-    validate_stochastic_petri(tm, tnames, context = "pn_to_odin(type = \"stochastic\")")
+    validate_stochastic_petri(tm, snames, tnames, context = "pn_to_odin(type = \"stochastic\")")
     lines <- c(lines, generate_stochastic_code(pn, snames, tnames, tm, rate_style))
   } else {
     lines <- c(lines, generate_discrete_code(pn, snames, tnames, tm, rate_style))
@@ -112,13 +112,33 @@ validate_delay_specs <- function(delays, tnames, snames) {
   }
 }
 
-validate_stochastic_petri <- function(tm, tnames, context) {
+validate_stochastic_petri <- function(tm, snames, tnames, context) {
   for (j in seq_along(tnames)) {
     if (any(tm$input[, j] > 1L)) {
       cli::cli_abort(c(
         "{.code {context}} does not currently support repeated self-inputs in stochastic transitions.",
         x = "Transition '{tnames[j]}' has input multiplicity greater than 1 for at least one species.",
         i = "Use deterministic code generation for this model, or refactor the transition."
+      ))
+    }
+  }
+
+  substrates <- vapply(seq_along(tnames), function(j) {
+    input_species <- which(tm$input[, j] > 0L)
+    if (length(input_species) == 0L) {
+      NA_integer_
+    } else {
+      input_species[1]
+    }
+  }, integer(1))
+
+  for (substrate in unique(stats::na.omit(substrates))) {
+    competing <- which(substrates == substrate)
+    if (length(competing) > 1L) {
+      cli::cli_abort(c(
+        "{.code {context}} does not currently support competing stochastic outflows from the same source species.",
+        x = "Transitions {paste(sprintf(\"'%s'\", tnames[competing]), collapse = ', ')} all consume species '{snames[substrate]}' as their stochastic substrate.",
+        i = "Use deterministic code generation for this model, or refactor the competing transitions."
       ))
     }
   }

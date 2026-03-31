@@ -281,7 +281,7 @@ petri_to_discrete <- function(pn) {
   tn <- transition_names(pn)
   ns <- length(sn)
   nt <- length(tn)
-  validate_stochastic_petri(tm, tn, context = "petri_to_discrete()")
+  validate_stochastic_petri(tm, sn, tn, context = "petri_to_discrete()")
 
   dynamics <- function(u, p, t) {
     dt <- p[["dt"]]

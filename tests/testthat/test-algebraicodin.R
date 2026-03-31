@@ -130,6 +130,18 @@ test_that("pn_to_odin rejects unsupported stochastic self-interactions", {
   )
 })
 
+test_that("pn_to_odin rejects competing stochastic outflows", {
+  pn <- labelled_petri_net(
+    c("S", "I", "V"),
+    inf = "S" %=>% "I",
+    vac = "S" %=>% "V"
+  )
+  expect_error(
+    pn_to_odin(pn, type = "stochastic"),
+    "competing stochastic outflows"
+  )
+})
+
 test_that("pn_to_odin rejects unsupported rate styles", {
   sir <- labelled_petri_net(
     c("S", "I", "R"),
@@ -379,6 +391,15 @@ test_that("petri_to_discrete supports source-free birth transitions", {
 test_that("petri_to_discrete rejects unsupported stochastic self-interactions", {
   pn <- labelled_petri_net(c("S", "R"), dimer = c("S", "S") %=>% "R")
   expect_error(petri_to_discrete(pn), "does not currently support repeated self-inputs")
+})
+
+test_that("petri_to_discrete rejects competing stochastic outflows", {
+  pn <- labelled_petri_net(
+    c("S", "I", "V"),
+    inf = "S" %=>% "I",
+    vac = "S" %=>% "V"
+  )
+  expect_error(petri_to_discrete(pn), "competing stochastic outflows")
 })
 
 test_that("plot helpers validate required time columns", {

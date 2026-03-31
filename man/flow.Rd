@@ -11,7 +11,8 @@ flow(from = NULL, to = NULL, rate)
 
 \item{to}{Target stock name (NULL or "cloud" for external outflow)}
 
-\item{rate}{Rate expression (quoted) or function(u, p, t)}
+\item{rate}{Rate expression (quoted), \verb{function(u, p, t)}, or
+\verb{function(u, sv, p, t)} for advanced use with sum variables}
 }
 \value{
 A flow spec list

@@ -9,7 +9,8 @@ StockFlowModel(acset = NULL, flow_fns = list(), var_exprs = list())
 \arguments{
 \item{acset}{The underlying StockFlow ACSet}
 
-\item{flow_fns}{Named list of flow rate functions: name -> function(u, p, t)}
+\item{flow_fns}{Named list of internal flow rate functions:
+name -> function(u, sv, p, t)}
 
 \item{var_exprs}{Named list of variable expression strings (for display)}
 }
