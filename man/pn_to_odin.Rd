@@ -32,7 +32,8 @@ to_odin(
 \item \code{"discrete"}: discrete-time deterministic Euler with \code{update()}
 }}
 
-\item{rate_style}{"mass_action" (default) or "custom"}
+\item{rate_style}{Currently only \code{"mass_action"} is implemented.
+\code{"custom"} is reserved and will error if requested.}
 
 \item{delays}{Named list for DDE: maps transition names to delay specs.
 Each element is a list with \code{tau} (numeric delay time) and optionally

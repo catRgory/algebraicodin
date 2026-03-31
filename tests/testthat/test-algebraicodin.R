@@ -113,6 +113,32 @@ test_that("pn_to_odin generates stochastic code", {
   expect_false(grepl("dt <- parameter", code))
 })
 
+test_that("pn_to_odin stochastic supports source-free birth transitions", {
+  pn <- labelled_petri_net(c("S"), birth = character(0) %=>% "S")
+  code <- pn_to_odin(pn, type = "stochastic")
+
+  expect_true(grepl("n_birth <- Poisson\\(birth \\* dt\\)", code))
+  expect_true(grepl("update\\(S\\) <- S \\+ n_birth", code))
+  expect_no_error(odin2::odin(code))
+})
+
+test_that("pn_to_odin rejects unsupported stochastic self-interactions", {
+  pn <- labelled_petri_net(c("S", "R"), dimer = c("S", "S") %=>% "R")
+  expect_error(
+    pn_to_odin(pn, type = "stochastic"),
+    "does not currently support repeated self-inputs"
+  )
+})
+
+test_that("pn_to_odin rejects unsupported rate styles", {
+  sir <- labelled_petri_net(
+    c("S", "I", "R"),
+    inf = c("S", "I") %=>% c("I", "I"),
+    rec = "I" %=>% "R"
+  )
+  expect_error(pn_to_odin(sir, type = "ode", rate_style = "custom"), "Only .*mass_action")
+})
+
 # === Comparison code =======================================================
 
 test_that("pn_to_odin with compare adds likelihood code", {
@@ -267,6 +293,22 @@ test_that("DDE requires delays argument", {
   expect_error(pn_to_odin(sir, type = "dde"), "delays")
 })
 
+test_that("DDE delay specs validate transition and species names", {
+  sir <- labelled_petri_net(
+    c("S", "I", "R"),
+    inf = c("S", "I") %=>% c("I", "I"),
+    rec = "I" %=>% "R"
+  )
+  expect_error(
+    pn_to_odin(sir, type = "dde", delays = list(wrong = list(tau = 5))),
+    "Unknown delayed transition"
+  )
+  expect_error(
+    pn_to_odin(sir, type = "dde", delays = list(inf = list(tau = 5, species = "X"))),
+    "Unknown delayed species"
+  )
+})
+
 # === Discrete deterministic code ==========================================
 
 test_that("pn_to_odin generates discrete deterministic code", {
@@ -323,6 +365,27 @@ test_that("petri_to_discrete runs stochastic simulation", {
   u_next <- eval_dynamics(rs, u, list(inf = 0.0005, rec = 0.25, dt = 1), 0)
   expect_equal(sum(u_next), 1000)  # conservation
   expect_true(all(u_next >= 0))
+})
+
+test_that("petri_to_discrete supports source-free birth transitions", {
+  pn <- labelled_petri_net(c("S"), birth = character(0) %=>% "S")
+  rs <- petri_to_discrete(pn)
+
+  set.seed(1)
+  u_next <- eval_dynamics(rs, c(S = 0), list(birth = 10, dt = 1), 0)
+  expect_true(u_next[1] > 0)
+})
+
+test_that("petri_to_discrete rejects unsupported stochastic self-interactions", {
+  pn <- labelled_petri_net(c("S", "R"), dimer = c("S", "S") %=>% "R")
+  expect_error(petri_to_discrete(pn), "does not currently support repeated self-inputs")
+})
+
+test_that("plot helpers validate required time columns", {
+  skip_if_not_installed("ggplot2")
+  sol <- data.frame(S = 1:3, I = 4:6)
+  expect_error(plot_comparison(sol, sol), "No time column found in `sol1`")
+  expect_error(plot_diff(sol, sol), "No time column found in `sol1`")
 })
 
 test_that("petri_to_delay produces DDE dynamics", {

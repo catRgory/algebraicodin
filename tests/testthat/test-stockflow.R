@@ -315,6 +315,32 @@ test_that("external inflows/outflows work", {
   expect_equal(du[["S"]], -17.0, tolerance = 1e-10)
 })
 
+test_that("stock_and_flow validates malformed flow specifications", {
+  expect_error(
+    stock_and_flow(
+      stocks = c("S", "I"),
+      flows = list(bad = list(from = "S", to = "I"))
+    ),
+    "must define a `rate`"
+  )
+
+  expect_error(
+    stock_and_flow(
+      stocks = c("S", "I"),
+      flows = list(bad = list(from = "X", to = "I", rate = quote(beta * S)))
+    ),
+    "unknown source stock"
+  )
+
+  expect_error(
+    stock_and_flow(
+      stocks = c("S", "I"),
+      flows = list(bad = list(from = NULL, to = NULL, rate = quote(beta)))
+    ),
+    "must specify at least one endpoint"
+  )
+})
+
 # --- Vectorfield comparison: stock-flow vs Petri net ---
 
 test_that("sf vectorfield matches Petri net vectorfield for simple SIR", {

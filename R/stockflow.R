@@ -236,6 +236,22 @@ stock_and_flow <- function(stocks, flows, params = character(0),
 
   for (fn in names(flows)) {
     fspec <- flows[[fn]]
+    if (!is.list(fspec)) {
+      cli::cli_abort("Flow '{fn}' must be a list or be created with `flow()`.")
+    }
+    if (is.null(fspec$from) && is.null(fspec$to)) {
+      cli::cli_abort("Flow '{fn}' must specify at least one endpoint via `from` or `to`.")
+    }
+    if (!is.null(fspec$from) && !(fspec$from %in% names(s_idx))) {
+      cli::cli_abort("Flow '{fn}' refers to unknown source stock '{fspec$from}'.")
+    }
+    if (!is.null(fspec$to) && !(fspec$to %in% names(s_idx))) {
+      cli::cli_abort("Flow '{fn}' refers to unknown target stock '{fspec$to}'.")
+    }
+    if (is.null(fspec$rate)) {
+      cli::cli_abort("Flow '{fn}' must define a `rate` expression or function.")
+    }
+
     # Each flow defines an auxiliary variable with the same name prefix
     vn <- paste0("v_", fn)
     v_idx[[vn]] <- acsets::add_part(ac, "V", vname = vn)
@@ -258,8 +274,13 @@ stock_and_flow <- function(stocks, flows, params = character(0),
     if (is.function(rate)) {
       flow_fns[[fn]] <- rate
       var_exprs[[vn]] <- "<function>"
-    } else if (is.language(rate) || is.character(rate)) {
-      rate_expr <- if (is.character(rate)) parse(text = rate)[[1]] else rate
+    } else if (is.language(rate) || is.character(rate) ||
+               (is.atomic(rate) && length(rate) == 1L && !is.na(rate))) {
+      rate_expr <- if (is.character(rate)) {
+        parse(text = rate)[[1]]
+      } else {
+        rate
+      }
       var_exprs[[vn]] <- deparse(rate_expr)
 
       # Extract variable names from expression
@@ -278,6 +299,10 @@ stock_and_flow <- function(stocks, flows, params = character(0),
 
       # Build flow rate function from expression
       flow_fns[[fn]] <- make_flow_fn(rate_expr, stocks, names(sums), params)
+    } else {
+      cli::cli_abort(
+        "Flow '{fn}' has an unsupported `rate`. Use a quoted expression, character expression, or function."
+      )
     }
   }
 

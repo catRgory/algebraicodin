@@ -143,6 +143,12 @@ plot_comparison <- function(sol1, sol2, vars = NULL,
 
   time_col1 <- intersect(c("time", "Time", "t"), names(sol1))[1]
   time_col2 <- intersect(c("time", "Time", "t"), names(sol2))[1]
+  if (is.na(time_col1)) {
+    cli::cli_abort("No time column found in `sol1`. Expected 'time', 'Time', or 't'.")
+  }
+  if (is.na(time_col2)) {
+    cli::cli_abort("No time column found in `sol2`. Expected 'time', 'Time', or 't'.")
+  }
 
   if (is.null(vars)) {
     vars <- intersect(
@@ -206,6 +212,12 @@ plot_diff <- function(sol1, sol2, vars = NULL, title = "Absolute Difference") {
 
   time_col1 <- intersect(c("time", "Time", "t"), names(sol1))[1]
   time_col2 <- intersect(c("time", "Time", "t"), names(sol2))[1]
+  if (is.na(time_col1)) {
+    cli::cli_abort("No time column found in `sol1`. Expected 'time', 'Time', or 't'.")
+  }
+  if (is.na(time_col2)) {
+    cli::cli_abort("No time column found in `sol2`. Expected 'time', 'Time', or 't'.")
+  }
 
   if (is.null(vars)) {
     vars <- intersect(

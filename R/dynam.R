@@ -281,13 +281,17 @@ petri_to_discrete <- function(pn) {
   tn <- transition_names(pn)
   ns <- length(sn)
   nt <- length(tn)
+  validate_stochastic_petri(tm, tn, context = "petri_to_discrete()")
 
   dynamics <- function(u, p, t) {
     dt <- p[["dt"]]
     draws <- numeric(nt)
     for (j in seq_len(nt)) {
       input_sp <- which(tm$input[, j] > 0L)
-      if (length(input_sp) == 0L) next
+      if (length(input_sp) == 0L) {
+        draws[j] <- stats::rpois(1, lambda = p[[tn[j]]] * dt)
+        next
+      }
       substrate <- input_sp[1]
       # Per-capita hazard (exclude substrate from rate)
       hazard <- p[[tn[j]]]
