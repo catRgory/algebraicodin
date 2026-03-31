@@ -122,7 +122,7 @@ sys <- dust2::dust_system_create(gen(), list(
 #> g++ -std=gnu++17 -I"/opt/R/4.5.3/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I'/home/runner/work/_temp/Library/dust2/include' -I'/home/runner/work/_temp/Library/monty/include' -I/usr/local/include   -DHAVE_INLINE -fopenmp  -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always  -c cpp11.cpp -o cpp11.o
 #> g++ -std=gnu++17 -I"/opt/R/4.5.3/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I'/home/runner/work/_temp/Library/dust2/include' -I'/home/runner/work/_temp/Library/monty/include' -I/usr/local/include   -DHAVE_INLINE -fopenmp  -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always  -c dust.cpp -o dust.o
 #> g++ -std=gnu++17 -shared -L/opt/R/4.5.3/lib/R/lib -L/usr/local/lib -o odin.systemef03de17.so cpp11.o dust.o -fopenmp -L/opt/R/4.5.3/lib/R/lib -lR
-#> installing to /tmp/RtmpI3Lf0A/devtools_install_35f32f146aad/00LOCK-dust_35f33183c7d6/00new/odin.systemef03de17/libs
+#> installing to /tmp/RtmpXp3f70/devtools_install_35db328b3d9c/00LOCK-dust_35db70541e77/00new/odin.systemef03de17/libs
 #> ** checking absolute paths in shared objects and dynamic libraries
 #> * DONE (odin.systemef03de17)
 dust2::dust_system_set_state_initial(sys)
@@ -196,7 +196,7 @@ sys <- dust2::dust_system_create(gen(), list(
 #> g++ -std=gnu++17 -I"/opt/R/4.5.3/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I'/home/runner/work/_temp/Library/dust2/include' -I'/home/runner/work/_temp/Library/monty/include' -I/usr/local/include   -DHAVE_INLINE -fopenmp  -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always  -c cpp11.cpp -o cpp11.o
 #> g++ -std=gnu++17 -I"/opt/R/4.5.3/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I'/home/runner/work/_temp/Library/dust2/include' -I'/home/runner/work/_temp/Library/monty/include' -I/usr/local/include   -DHAVE_INLINE -fopenmp  -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always  -c dust.cpp -o dust.o
 #> g++ -std=gnu++17 -shared -L/opt/R/4.5.3/lib/R/lib -L/usr/local/lib -o odin.systemaea97e8a.so cpp11.o dust.o -fopenmp -L/opt/R/4.5.3/lib/R/lib -lR
-#> installing to /tmp/RtmpI3Lf0A/devtools_install_35f316c896de/00LOCK-dust_35f32559da6c/00new/odin.systemaea97e8a/libs
+#> installing to /tmp/RtmpXp3f70/devtools_install_35db60570980/00LOCK-dust_35db6d6a709b/00new/odin.systemaea97e8a/libs
 #> ** checking absolute paths in shared objects and dynamic libraries
 #> * DONE (odin.systemaea97e8a)
 dust2::dust_system_set_state_initial(sys)
@@ -267,7 +267,7 @@ sys <- dust2::dust_system_create(gen(), list(
 #> g++ -std=gnu++17 -I"/opt/R/4.5.3/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I'/home/runner/work/_temp/Library/dust2/include' -I'/home/runner/work/_temp/Library/monty/include' -I/usr/local/include   -DHAVE_INLINE -fopenmp  -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always  -c cpp11.cpp -o cpp11.o
 #> g++ -std=gnu++17 -I"/opt/R/4.5.3/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I'/home/runner/work/_temp/Library/dust2/include' -I'/home/runner/work/_temp/Library/monty/include' -I/usr/local/include   -DHAVE_INLINE -fopenmp  -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always  -c dust.cpp -o dust.o
 #> g++ -std=gnu++17 -shared -L/opt/R/4.5.3/lib/R/lib -L/usr/local/lib -o odin.system04d4cb34.so cpp11.o dust.o -fopenmp -L/opt/R/4.5.3/lib/R/lib -lR
-#> installing to /tmp/RtmpI3Lf0A/devtools_install_35f352560676/00LOCK-dust_35f31cde6826/00new/odin.system04d4cb34/libs
+#> installing to /tmp/RtmpXp3f70/devtools_install_35db5c2a9a0f/00LOCK-dust_35db61513d82/00new/odin.system04d4cb34/libs
 #> ** checking absolute paths in shared objects and dynamic libraries
 #> * DONE (odin.system04d4cb34)
 dust2::dust_system_set_state_initial(sys)
@@ -340,7 +340,7 @@ sys <- dust2::dust_system_create(gen(), list(
 #> g++ -std=gnu++17 -I"/opt/R/4.5.3/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I'/home/runner/work/_temp/Library/dust2/include' -I'/home/runner/work/_temp/Library/monty/include' -I/usr/local/include   -DHAVE_INLINE -fopenmp  -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always  -c cpp11.cpp -o cpp11.o
 #> g++ -std=gnu++17 -I"/opt/R/4.5.3/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I'/home/runner/work/_temp/Library/dust2/include' -I'/home/runner/work/_temp/Library/monty/include' -I/usr/local/include   -DHAVE_INLINE -fopenmp  -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always  -c dust.cpp -o dust.o
 #> g++ -std=gnu++17 -shared -L/opt/R/4.5.3/lib/R/lib -L/usr/local/lib -o odin.system6f89bca5.so cpp11.o dust.o -fopenmp -L/opt/R/4.5.3/lib/R/lib -lR
-#> installing to /tmp/RtmpI3Lf0A/devtools_install_35f3730a9395/00LOCK-dust_35f314e44a46/00new/odin.system6f89bca5/libs
+#> installing to /tmp/RtmpXp3f70/devtools_install_35db338e6ac5/00LOCK-dust_35db396f42b/00new/odin.system6f89bca5/libs
 #> ** checking absolute paths in shared objects and dynamic libraries
 #> * DONE (odin.system6f89bca5)
 dust2::dust_system_set_state_initial(sys)
@@ -419,7 +419,7 @@ sys_alg <- dust2::dust_system_create(gen_alg(), pars)
 #> g++ -std=gnu++17 -I"/opt/R/4.5.3/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I'/home/runner/work/_temp/Library/dust2/include' -I'/home/runner/work/_temp/Library/monty/include' -I/usr/local/include   -DHAVE_INLINE -fopenmp  -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always  -c cpp11.cpp -o cpp11.o
 #> g++ -std=gnu++17 -I"/opt/R/4.5.3/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I'/home/runner/work/_temp/Library/dust2/include' -I'/home/runner/work/_temp/Library/monty/include' -I/usr/local/include   -DHAVE_INLINE -fopenmp  -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always  -c dust.cpp -o dust.o
 #> g++ -std=gnu++17 -shared -L/opt/R/4.5.3/lib/R/lib -L/usr/local/lib -o odin.systemef2ee338.so cpp11.o dust.o -fopenmp -L/opt/R/4.5.3/lib/R/lib -lR
-#> installing to /tmp/RtmpI3Lf0A/devtools_install_35f36972763b/00LOCK-dust_35f316612553/00new/odin.systemef2ee338/libs
+#> installing to /tmp/RtmpXp3f70/devtools_install_35db45159bec/00LOCK-dust_35db4583a38a/00new/odin.systemef2ee338/libs
 #> ** checking absolute paths in shared objects and dynamic libraries
 #> * DONE (odin.systemef2ee338)
 dust2::dust_system_set_state_initial(sys_alg)
@@ -433,7 +433,7 @@ sys_man <- dust2::dust_system_create(gen_man(), pars)
 #> g++ -std=gnu++17 -I"/opt/R/4.5.3/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I'/home/runner/work/_temp/Library/dust2/include' -I'/home/runner/work/_temp/Library/monty/include' -I/usr/local/include   -DHAVE_INLINE -fopenmp  -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always  -c cpp11.cpp -o cpp11.o
 #> g++ -std=gnu++17 -I"/opt/R/4.5.3/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I'/home/runner/work/_temp/Library/dust2/include' -I'/home/runner/work/_temp/Library/monty/include' -I/usr/local/include   -DHAVE_INLINE -fopenmp  -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always  -c dust.cpp -o dust.o
 #> g++ -std=gnu++17 -shared -L/opt/R/4.5.3/lib/R/lib -L/usr/local/lib -o odin.systemca5402e9.so cpp11.o dust.o -fopenmp -L/opt/R/4.5.3/lib/R/lib -lR
-#> installing to /tmp/RtmpI3Lf0A/devtools_install_35f3339ac7f5/00LOCK-dust_35f3752ef3ff/00new/odin.systemca5402e9/libs
+#> installing to /tmp/RtmpXp3f70/devtools_install_35db4ce500d3/00LOCK-dust_35db2464ab1e/00new/odin.systemca5402e9/libs
 #> ** checking absolute paths in shared objects and dynamic libraries
 #> * DONE (odin.systemca5402e9)
 dust2::dust_system_set_state_initial(sys_man)

@@ -149,7 +149,7 @@ sys <- dust_system_create(gen(), list(
 #> g++ -std=gnu++17 -I"/opt/R/4.5.3/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I'/home/runner/work/_temp/Library/dust2/include' -I'/home/runner/work/_temp/Library/monty/include' -I/usr/local/include   -DHAVE_INLINE -fopenmp  -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always  -c cpp11.cpp -o cpp11.o
 #> g++ -std=gnu++17 -I"/opt/R/4.5.3/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I'/home/runner/work/_temp/Library/dust2/include' -I'/home/runner/work/_temp/Library/monty/include' -I/usr/local/include   -DHAVE_INLINE -fopenmp  -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always  -c dust.cpp -o dust.o
 #> g++ -std=gnu++17 -shared -L/opt/R/4.5.3/lib/R/lib -L/usr/local/lib -o odin.system5e0d334b.so cpp11.o dust.o -fopenmp -L/opt/R/4.5.3/lib/R/lib -lR
-#> installing to /tmp/RtmpQ5Fqtz/devtools_install_37d71b7b1286/00LOCK-dust_37d76b20e64b/00new/odin.system5e0d334b/libs
+#> installing to /tmp/RtmpkJuYUC/devtools_install_37bd169e6a7b/00LOCK-dust_37bd47b85a49/00new/odin.system5e0d334b/libs
 #> ** checking absolute paths in shared objects and dynamic libraries
 #> * DONE (odin.system5e0d334b)
 dust_system_set_state_initial(sys)
@@ -263,7 +263,7 @@ sys3 <- dust_system_create(gen3(), list(
 #> g++ -std=gnu++17 -I"/opt/R/4.5.3/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I'/home/runner/work/_temp/Library/dust2/include' -I'/home/runner/work/_temp/Library/monty/include' -I/usr/local/include   -DHAVE_INLINE -fopenmp  -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always  -c cpp11.cpp -o cpp11.o
 #> g++ -std=gnu++17 -I"/opt/R/4.5.3/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I'/home/runner/work/_temp/Library/dust2/include' -I'/home/runner/work/_temp/Library/monty/include' -I/usr/local/include   -DHAVE_INLINE -fopenmp  -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always  -c dust.cpp -o dust.o
 #> g++ -std=gnu++17 -shared -L/opt/R/4.5.3/lib/R/lib -L/usr/local/lib -o odin.systeme36bc279.so cpp11.o dust.o -fopenmp -L/opt/R/4.5.3/lib/R/lib -lR
-#> installing to /tmp/RtmpQ5Fqtz/devtools_install_37d7fd7e7b4/00LOCK-dust_37d7190692c4/00new/odin.systeme36bc279/libs
+#> installing to /tmp/RtmpkJuYUC/devtools_install_37bd1e4a714c/00LOCK-dust_37bd15016f04/00new/odin.systeme36bc279/libs
 #> ** checking absolute paths in shared objects and dynamic libraries
 #> * DONE (odin.systeme36bc279)
 dust_system_set_state_initial(sys3)

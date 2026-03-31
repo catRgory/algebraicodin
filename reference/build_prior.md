@@ -27,10 +27,10 @@ A monty_model object
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 p <- build_prior(
   beta = prior_exp(mean = 0.3),
   gamma = prior_exp(mean = 0.1)
 )
-} # }
+# }
 ```

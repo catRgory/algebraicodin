@@ -35,30 +35,31 @@ simulate:
 library(algebraicodin)
 
 # 1. Define an SIR Petri net
+# Transition names (inf, rec) become the odin2 rate parameter names
 sir <- labelled_petri_net(
   c("S", "I", "R"),
   inf = c("S", "I") %=>% c("I", "I"),
   rec = "I" %=>% "R"
 )
 
-# 2. Open the system at boundary species
-sir_open <- open_petri_net(sir, legs = list(c("S", "I"), c("I", "R")))
-
-# 3. Generate odin2 code
-code <- pn_to_odin(sir, type = "ode",
-  params = list(beta = 0.3, gamma = 0.1),
-  initial = list(S = 990, I = 10, R = 0))
+# 2. Generate odin2 code
+code <- pn_to_odin(sir, type = "ode")
 cat(code)
 
-# 4. Simulate with odin2/dust2
+# 3. Simulate with odin2/dust2
+# Parameters: rate constants named after transitions (inf, rec)
+# plus initial conditions (S0, I0, R0)
 gen <- odin2::odin(code)
-sys <- dust2::dust_system_create(gen, list())
+sys <- dust2::dust_system_create(gen,
+  list(inf = 0.3, rec = 0.1, S0 = 990, I0 = 10, R0 = 0),
+  n_particles = 1)
 dust2::dust_system_set_state_initial(sys)
 t <- seq(0, 100)
 y <- dust2::dust_system_simulate(sys, t)
 
-# 5. Plot results
-plot_trajectory(y, t, species = c("S", "I", "R"))
+# 4. Plot results (y is [species x time] for n_particles = 1)
+sol <- data.frame(time = t, S = y[1, ], I = y[2, ], R = y[3, ])
+plot_trajectory(sol, title = "SIR model")
 ```
 
 ## Features

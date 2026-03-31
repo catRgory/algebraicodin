@@ -294,7 +294,7 @@ gen_alg <- odin2::odin(code)
 #> g++ -std=gnu++17 -I"/opt/R/4.5.3/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I'/home/runner/work/_temp/Library/dust2/include' -I'/home/runner/work/_temp/Library/monty/include' -I/usr/local/include   -DHAVE_INLINE -fopenmp  -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always  -c cpp11.cpp -o cpp11.o
 #> g++ -std=gnu++17 -I"/opt/R/4.5.3/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I'/home/runner/work/_temp/Library/dust2/include' -I'/home/runner/work/_temp/Library/monty/include' -I/usr/local/include   -DHAVE_INLINE -fopenmp  -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always  -c dust.cpp -o dust.o
 #> g++ -std=gnu++17 -shared -L/opt/R/4.5.3/lib/R/lib -L/usr/local/lib -o odin.system7ebba6e1.so cpp11.o dust.o -fopenmp -L/opt/R/4.5.3/lib/R/lib -lR
-#> installing to /tmp/RtmpNXDps3/devtools_install_38fe13918a99/00LOCK-dust_38fe30566247/00new/odin.system7ebba6e1/libs
+#> installing to /tmp/Rtmpzx5LUm/devtools_install_38e7415ddb06/00LOCK-dust_38e757c20f0c/00new/odin.system7ebba6e1/libs
 #> ** checking absolute paths in shared objects and dynamic libraries
 #> * DONE (odin.system7ebba6e1)
 #> ℹ Loading odin.system7ebba6e1

@@ -67,7 +67,7 @@ A function that creates an odin system, or a code string
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 sir <- labelled_petri_net(
   c("S", "I", "R"),
   inf = c("S", "I") %=>% c("I", "I"),
@@ -75,5 +75,27 @@ sir <- labelled_petri_net(
 )
 gen <- pn_to_odin_system(sir, type = "ode")
 sys <- gen() # creates an odin2 system (requires odin2)
-} # }
+#> ✔ Wrote 'DESCRIPTION'
+#> ✔ Wrote 'NAMESPACE'
+#> ✔ Wrote 'R/dust.R'
+#> ✔ Wrote 'src/dust.cpp'
+#> ✔ Wrote 'src/Makevars'
+#> ℹ 13 functions decorated with [[cpp11::register]]
+#> ✔ generated file cpp11.R
+#> ✔ generated file cpp11.cpp
+#> ℹ Re-compiling odin.system840d9d16
+#> ── R CMD INSTALL ───────────────────────────────────────────────────────────────
+#> * installing *source* package ‘odin.system840d9d16’ ...
+#> ** this is package ‘odin.system840d9d16’ version ‘0.0.1’
+#> ** using staged installation
+#> ** libs
+#> using C++ compiler: ‘g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0’
+#> g++ -std=gnu++17 -I"/opt/R/4.5.3/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I'/home/runner/work/_temp/Library/dust2/include' -I'/home/runner/work/_temp/Library/monty/include' -I/usr/local/include   -DHAVE_INLINE -fopenmp  -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always  -c cpp11.cpp -o cpp11.o
+#> g++ -std=gnu++17 -I"/opt/R/4.5.3/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I'/home/runner/work/_temp/Library/dust2/include' -I'/home/runner/work/_temp/Library/monty/include' -I/usr/local/include   -DHAVE_INLINE -fopenmp  -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always  -c dust.cpp -o dust.o
+#> g++ -std=gnu++17 -shared -L/opt/R/4.5.3/lib/R/lib -L/usr/local/lib -o odin.system840d9d16.so cpp11.o dust.o -fopenmp -L/opt/R/4.5.3/lib/R/lib -lR
+#> installing to /tmp/RtmpI9yJyB/devtools_install_1f79765eddcf/00LOCK-dust_1f794f15cb3b/00new/odin.system840d9d16/libs
+#> ** checking absolute paths in shared objects and dynamic libraries
+#> * DONE (odin.system840d9d16)
+#> ℹ Loading odin.system840d9d16
+# }
 ```
