@@ -18,7 +18,7 @@ Each argument is a named prior specification created by
 \code{\link[=prior_exp]{prior_exp()}}, \code{\link[=prior_uniform]{prior_uniform()}}, or \code{\link[=prior_normal]{prior_normal()}}.
 }
 \examples{
-\dontrun{
+\donttest{
 p <- build_prior(
   beta = prior_exp(mean = 0.3),
   gamma = prior_exp(mean = 0.1)

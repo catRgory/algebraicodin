@@ -49,7 +49,7 @@ If odin2 is available, this returns a function that when called creates
 an odin system. Otherwise returns the code string.
 }
 \examples{
-\dontrun{
+\donttest{
 sir <- labelled_petri_net(
   c("S", "I", "R"),
   inf = c("S", "I") \%=>\% c("I", "I"),

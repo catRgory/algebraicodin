@@ -39,7 +39,7 @@ plot_petri <- function(pn) {
 #' @param w A UWD ACSet
 #' @returns A DiagrammeR `htmlwidget`
 #' @examples
-#' w <- uwd(
+#' w <- catlab::uwd(
 #'   outer = c("s", "i", "r"),
 #'   infection = c("s", "i"),
 #'   recovery = c("i", "r")

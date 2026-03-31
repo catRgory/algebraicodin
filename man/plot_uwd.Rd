@@ -17,7 +17,7 @@ Boxes are yellow rectangles, junctions are grey circles,
 outer ports are small black diamonds.
 }
 \examples{
-w <- uwd(
+w <- catlab::uwd(
   outer = c("s", "i", "r"),
   infection = c("s", "i"),
   recovery = c("i", "r")

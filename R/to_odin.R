@@ -379,7 +379,7 @@ mass_action_hazard <- function(snames, input_col, rate_name) {
 #' @inheritParams pn_to_odin
 #' @returns A function that creates an odin system, or a code string
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' sir <- labelled_petri_net(
 #'   c("S", "I", "R"),
 #'   inf = c("S", "I") %=>% c("I", "I"),

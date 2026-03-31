@@ -270,7 +270,7 @@ fit_mcmc <- function(model = NULL, data = NULL, pars, fixed = list(),
 #' @returns A monty_model object
 #' @export
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' p <- build_prior(
 #'   beta = prior_exp(mean = 0.3),
 #'   gamma = prior_exp(mean = 0.1)
