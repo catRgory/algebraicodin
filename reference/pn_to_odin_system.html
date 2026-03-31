@@ -77,7 +77,8 @@ an odin system. Otherwise returns the code string.</p>
 
 
 <dt id="arg-rate-style">rate_style<a class="anchor" aria-label="anchor" href="#arg-rate-style"></a></dt>
-<dd><p>"mass_action" (default) or "custom"</p></dd>
+<dd><p>Currently only <code>"mass_action"</code> is implemented.
+<code>"custom"</code> is reserved and will error if requested.</p></dd>
 
 
 <dt id="arg-delays">delays<a class="anchor" aria-label="anchor" href="#arg-delays"></a></dt>
@@ -124,7 +125,7 @@ distribution families (e.g., <code>list(cases = "Poisson")</code>)</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> g++ -std=gnu++17 -I"/opt/R/4.5.3/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I'/home/runner/work/_temp/Library/dust2/include' -I'/home/runner/work/_temp/Library/monty/include' -I/usr/local/include   -DHAVE_INLINE -fopenmp  -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always  -c cpp11.cpp -o cpp11.o</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> g++ -std=gnu++17 -I"/opt/R/4.5.3/lib/R/include" -DNDEBUG  -I'/home/runner/work/_temp/Library/cpp11/include' -I'/home/runner/work/_temp/Library/dust2/include' -I'/home/runner/work/_temp/Library/monty/include' -I/usr/local/include   -DHAVE_INLINE -fopenmp  -fpic  -g -O2  -Wall -pedantic -fdiagnostics-color=always  -c dust.cpp -o dust.o</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> g++ -std=gnu++17 -shared -L/opt/R/4.5.3/lib/R/lib -L/usr/local/lib -o odin.system840d9d16.so cpp11.o dust.o -fopenmp -L/opt/R/4.5.3/lib/R/lib -lR</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> installing to /tmp/RtmpI9yJyB/devtools_install_1f79765eddcf/00LOCK-dust_1f794f15cb3b/00new/odin.system840d9d16/libs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> installing to /tmp/Rtmpvy9D77/devtools_install_1c8e4ba45590/00LOCK-dust_1c8e36d6dc1/00new/odin.system840d9d16/libs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ** checking absolute paths in shared objects and dynamic libraries</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * DONE (odin.system840d9d16)</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Loading <span style="color: #0000BB;">odin.system840d9d16</span></span>

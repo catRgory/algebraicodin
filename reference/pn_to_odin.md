@@ -46,7 +46,8 @@ to_odin(
 
 - rate_style:
 
-  "mass_action" (default) or "custom"
+  Currently only `"mass_action"` is implemented. `"custom"` is reserved
+  and will error if requested.
 
 - delays:
 
