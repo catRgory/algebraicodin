@@ -68,7 +68,7 @@ pn_to_odin <- function(pn, type = c("ode", "dde", "stochastic", "discrete"),
   }
 
   # Add comparison/likelihood code if requested
-  lines <- c(lines, generate_compare_code(compare, "petri"))
+  lines <- c(lines, generate_compare_code(compare, "petri", type))
 
   paste(lines, collapse = "\n")
 }

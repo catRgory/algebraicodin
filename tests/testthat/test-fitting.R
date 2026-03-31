@@ -70,7 +70,7 @@ test_that("generate_compare_code handles simple string spec", {
 
 test_that("generate_compare_code handles transition incidence", {
   code <- algebraicodin:::generate_compare_code(
-    list(cases = observe("Poisson", transition = "inf")), "petri")
+    list(cases = observe("Poisson", transition = "inf")), "petri", "stochastic")
   code_str <- paste(code, collapse = "\n")
   expect_true(grepl("initial(incidence_inf, zero_every = 1) <- 0",
                      code_str, fixed = TRUE))
@@ -81,16 +81,37 @@ test_that("generate_compare_code handles transition incidence", {
 
 test_that("generate_compare_code handles flow incidence", {
   code <- algebraicodin:::generate_compare_code(
-    list(cases = observe("Poisson", flow = "infection")), "stockflow")
+    list(cases = observe("Poisson", flow = "infection")), "stockflow", "stochastic"
+  )
   code_str <- paste(code, collapse = "\n")
   expect_true(grepl("incidence_infection", code_str))
   expect_true(grepl("cases ~ Poisson(incidence_infection)",
                      code_str, fixed = TRUE))
 })
 
+test_that("generate_compare_code uses model-specific incidence accumulation", {
+  ode_code <- paste(
+    algebraicodin:::generate_compare_code(
+      list(cases = observe("Poisson", transition = "inf")), "petri", "ode"
+    ),
+    collapse = "\n"
+  )
+  expect_true(grepl("deriv\\(incidence_inf\\) <- rate_inf", ode_code))
+  expect_false(grepl("update\\(incidence_inf\\)", ode_code))
+
+  discrete_code <- paste(
+    algebraicodin:::generate_compare_code(
+      list(cases = observe("Poisson", flow = "infection")), "stockflow", "discrete"
+    ),
+    collapse = "\n"
+  )
+  expect_true(grepl("update\\(incidence_infection\\) <- incidence_infection \\+ dt \\* v_infection",
+                    discrete_code))
+})
+
 test_that("generate_compare_code handles state observation", {
   code <- algebraicodin:::generate_compare_code(
-    list(prevalence = observe("Normal", state = "I", sd = "sigma")), "petri")
+    list(prevalence = observe("Normal", state = "I", sd = "sigma")), "petri", "stochastic")
   code_str <- paste(code, collapse = "\n")
   expect_true(grepl("sigma <- parameter()", code_str, fixed = TRUE))
   expect_true(grepl("prevalence ~ Normal(I, sigma)", code_str, fixed = TRUE))
@@ -99,7 +120,7 @@ test_that("generate_compare_code handles state observation", {
 test_that("generate_compare_code handles noise parameter", {
   code <- algebraicodin:::generate_compare_code(
     list(cases = observe("Poisson", transition = "inf",
-                         noise = "exp_noise")), "petri")
+                         noise = "exp_noise")), "petri", "stochastic")
   code_str <- paste(code, collapse = "\n")
   expect_true(grepl("exp_noise <- parameter(1e6)", code_str, fixed = TRUE))
   expect_true(grepl("noise_cases <- incidence_inf + 1 / exp_noise",
@@ -109,7 +130,7 @@ test_that("generate_compare_code handles noise parameter", {
 
 test_that("generate_compare_code handles custom expr", {
   code <- algebraicodin:::generate_compare_code(
-    list(deaths = observe("Poisson", expr = "mu * I")), "petri")
+    list(deaths = observe("Poisson", expr = "mu * I")), "petri", "stochastic")
   code_str <- paste(code, collapse = "\n")
   expect_true(grepl("deaths ~ Poisson(mu * I)", code_str, fixed = TRUE))
 })
@@ -406,6 +427,27 @@ test_that("stochastic PN with compare compiles in odin2", {
   expect_true(!is.null(gen))
 })
 
+test_that("deterministic PN incidence compare compiles in odin2", {
+  skip_if_not_installed("odin2")
+
+  sir <- labelled_petri_net(
+    c("S", "I", "R"),
+    inf = c("S", "I") %=>% c("I", "I"),
+    rec = "I" %=>% "R"
+  )
+
+  ode_code <- pn_to_odin(sir, type = "ode",
+    compare = list(cases = observe("Poisson", transition = "inf")))
+  expect_true(grepl("deriv\\(incidence_inf\\) <- rate_inf", ode_code))
+  expect_no_error(odin2::odin(ode_code))
+
+  discrete_code <- pn_to_odin(sir, type = "discrete",
+    compare = list(cases = observe("Poisson", transition = "inf")))
+  expect_true(grepl("update\\(incidence_inf\\) <- incidence_inf \\+ dt \\* rate_inf",
+                    discrete_code))
+  expect_no_error(odin2::odin(discrete_code))
+})
+
 test_that("stochastic SF with compare compiles in odin2", {
   skip_if_not_installed("odin2")
 
@@ -426,4 +468,56 @@ test_that("stochastic SF with compare compiles in odin2", {
 
   gen <- odin2::odin(code)
   expect_true(!is.null(gen))
+})
+
+test_that("deterministic SF incidence compare compiles in odin2", {
+  skip_if_not_installed("odin2")
+
+  sir <- stock_and_flow(
+    stocks = c("S", "I", "R"),
+    flows = list(
+      infection = flow(from = "S", to = "I", rate = beta * S * I / N),
+      recovery = flow(from = "I", to = "R", rate = gamma * I)
+    ),
+    sums = list(N = c("S", "I", "R")),
+    params = c("beta", "gamma")
+  )
+
+  ode_code <- sf_to_odin(sir, type = "ode",
+    compare = list(cases = observe("Poisson", flow = "infection")))
+  expect_true(grepl("deriv\\(incidence_infection\\) <- v_infection", ode_code))
+  expect_no_error(odin2::odin(ode_code))
+
+  discrete_code <- sf_to_odin(sir, type = "discrete",
+    compare = list(cases = observe("Poisson", flow = "infection")))
+  expect_true(grepl("update\\(incidence_infection\\) <- incidence_infection \\+ dt \\* v_infection",
+                    discrete_code))
+  expect_no_error(odin2::odin(discrete_code))
+})
+
+test_that("plot helpers honor requested parameter names", {
+  skip_if_not_installed("ggplot2")
+
+  pars <- array(0, dim = c(2, 3, 1), dimnames = list(c("beta", "gamma"), NULL, NULL))
+  pars["beta", , 1] <- c(1, 2, 3)
+  pars["gamma", , 1] <- c(10, 11, 12)
+  samples <- structure(list(pars = pars), class = "monty_samples")
+
+  traces <- plot_traces(samples, pars = "gamma")
+  expect_equal(unique(traces$data$parameter), "gamma")
+  expect_equal(traces$data$value, c(10, 11, 12))
+
+  posterior <- plot_posterior(samples, pars = "gamma", burnin = 1)
+  expect_equal(unique(posterior$data$parameter), "gamma")
+  expect_equal(sort(unique(posterior$data$value)), c(11, 12))
+})
+
+test_that("plot helpers reject unknown parameter names", {
+  skip_if_not_installed("ggplot2")
+
+  pars <- array(1:6, dim = c(2, 3, 1), dimnames = list(c("beta", "gamma"), NULL, NULL))
+  samples <- structure(list(pars = pars), class = "monty_samples")
+
+  expect_error(plot_traces(samples, pars = "delta"), "Unknown parameter name")
+  expect_error(plot_posterior(samples, pars = "delta"), "Unknown parameter name")
 })

@@ -39,9 +39,11 @@ observe <- function(dist, transition = NULL, flow = NULL, state = NULL,
 }
 
 # Internal: generate odin2 comparison code from compare specs
-generate_compare_code <- function(compare, model_type = c("petri", "stockflow")) {
+generate_compare_code <- function(compare, model_type = c("petri", "stockflow"),
+                                  sim_type = c("stochastic", "ode", "dde", "discrete")) {
   if (is.null(compare)) return(character())
   model_type <- match.arg(model_type)
+  sim_type <- match.arg(sim_type)
 
   lines <- character()
   incidence_lines <- character()
@@ -63,20 +65,24 @@ generate_compare_code <- function(compare, model_type = c("petri", "stockflow"))
     # Determine model expression for comparison
     if (!is.null(spec$transition)) {
       inc_var <- paste0("incidence_", spec$transition)
-      incidence_lines <- c(incidence_lines,
-        sprintf("initial(%s, zero_every = %d) <- 0",
-                inc_var, spec$zero_every),
-        sprintf("update(%s) <- %s + n_%s",
-                inc_var, inc_var, spec$transition))
+      incidence_lines <- c(incidence_lines, compare_incidence_lines(
+        inc_var = inc_var,
+        source = spec$transition,
+        model_type = model_type,
+        sim_type = sim_type,
+        zero_every = spec$zero_every
+      ))
       model_expr <- inc_var
 
     } else if (!is.null(spec$flow)) {
       inc_var <- paste0("incidence_", spec$flow)
-      incidence_lines <- c(incidence_lines,
-        sprintf("initial(%s, zero_every = %d) <- 0",
-                inc_var, spec$zero_every),
-        sprintf("update(%s) <- %s + n_%s",
-                inc_var, inc_var, spec$flow))
+      incidence_lines <- c(incidence_lines, compare_incidence_lines(
+        inc_var = inc_var,
+        source = spec$flow,
+        model_type = model_type,
+        sim_type = sim_type,
+        zero_every = spec$zero_every
+      ))
       model_expr <- inc_var
 
     } else if (!is.null(spec$state)) {
@@ -121,6 +127,66 @@ generate_compare_code <- function(compare, model_type = c("petri", "stockflow"))
     result <- c(result, "", "## Comparison to data", lines)
 
   result
+}
+
+compare_incidence_lines <- function(inc_var, source, model_type, sim_type, zero_every) {
+  source_expr <- switch(
+    sim_type,
+    stochastic = sprintf("n_%s", source),
+    discrete = if (identical(model_type, "petri")) {
+      sprintf("dt * rate_%s", source)
+    } else {
+      sprintf("dt * v_%s", source)
+    },
+    ode = if (identical(model_type, "petri")) {
+      sprintf("rate_%s", source)
+    } else {
+      sprintf("v_%s", source)
+    },
+    dde = if (identical(model_type, "petri")) {
+      sprintf("rate_%s", source)
+    } else {
+      sprintf("v_%s", source)
+    }
+  )
+
+  update_line <- switch(
+    sim_type,
+    stochastic = sprintf("update(%s) <- %s + %s", inc_var, inc_var, source_expr),
+    discrete = sprintf("update(%s) <- %s + %s", inc_var, inc_var, source_expr),
+    ode = sprintf("deriv(%s) <- %s", inc_var, source_expr),
+    dde = sprintf("deriv(%s) <- %s", inc_var, source_expr)
+  )
+
+  c(
+    sprintf("initial(%s, zero_every = %d) <- 0", inc_var, zero_every),
+    update_line
+  )
+}
+
+resolve_plot_parameters <- function(par_array, pars) {
+  available <- rownames(par_array)
+  if (is.null(available)) {
+    available <- paste0("p", seq_len(nrow(par_array)))
+  }
+
+  if (is.null(pars)) {
+    indices <- seq_along(available)
+    names(indices) <- available
+    return(indices)
+  }
+
+  indices <- match(pars, available)
+  if (anyNA(indices)) {
+    unknown <- pars[is.na(indices)]
+    cli::cli_abort(c(
+      "Unknown parameter name(s) requested.",
+      x = paste(unknown, collapse = ", "),
+      i = "Available parameters are: {paste(available, collapse = ', ')}."
+    ))
+  }
+  names(indices) <- pars
+  indices
 }
 
 
@@ -378,20 +444,17 @@ plot_traces <- function(samples, pars = NULL, burnin = 0) {
   if (!requireNamespace("ggplot2", quietly = TRUE))
     cli::cli_abort("Package {.pkg ggplot2} required for plotting")
 
-  # Extract parameter names and samples
-  if (is.null(pars)) {
-    pars <- rownames(samples$pars)
-    if (is.null(pars)) pars <- paste0("p", seq_len(nrow(samples$pars)))
-  }
+  par_indices <- resolve_plot_parameters(samples$pars, pars)
+  pars <- names(par_indices)
   n_chains <- dim(samples$pars)[3]
   n_steps <- dim(samples$pars)[2]
 
   df_list <- list()
-  for (i in seq_along(pars)) {
+  for (i in seq_along(par_indices)) {
     for (ch in seq_len(n_chains)) {
       df_list[[length(df_list) + 1]] <- data.frame(
         step = seq_len(n_steps),
-        value = samples$pars[i, , ch],
+        value = samples$pars[par_indices[[i]], , ch],
         parameter = pars[i],
         chain = factor(ch)
       )
@@ -428,17 +491,15 @@ plot_posterior <- function(samples, pars = NULL, burnin = 0,
   if (!requireNamespace("ggplot2", quietly = TRUE))
     cli::cli_abort("Package {.pkg ggplot2} required for plotting")
 
-  if (is.null(pars)) {
-    pars <- rownames(samples$pars)
-    if (is.null(pars)) pars <- paste0("p", seq_len(nrow(samples$pars)))
-  }
+  par_indices <- resolve_plot_parameters(samples$pars, pars)
+  pars <- names(par_indices)
   n_chains <- dim(samples$pars)[3]
   n_steps <- dim(samples$pars)[2]
   start <- burnin + 1
 
   df_list <- list()
-  for (i in seq_along(pars)) {
-    vals <- as.vector(samples$pars[i, start:n_steps, ])
+  for (i in seq_along(par_indices)) {
+    vals <- as.vector(samples$pars[par_indices[[i]], start:n_steps, ])
     df_list[[i]] <- data.frame(
       value = vals,
       parameter = pars[i]

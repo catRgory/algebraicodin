@@ -643,7 +643,7 @@ sf_to_odin <- function(sf, type = "ode", initial = NULL, compare = NULL) {
   }
 
   # Add comparison/likelihood code
-  lines <- c(lines, generate_compare_code(compare, "stockflow"))
+  lines <- c(lines, generate_compare_code(compare, "stockflow", type))
 
   paste(lines, collapse = "\n")
 }
@@ -1033,7 +1033,7 @@ sf_to_odin_array <- function(sf, type = "ode", initial = NULL,
   }
 
   # Comparison code
-  lines <- c(lines, generate_compare_code(compare, "stockflow"))
+  lines <- c(lines, generate_compare_code(compare, "stockflow", type))
 
   paste(lines, collapse = "\n")
 }
